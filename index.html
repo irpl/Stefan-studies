@@ -1,0 +1,433 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ATC Frequency Quiz</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background: #1a1a2e;
+      color: #eee;
+      min-height: 100vh;
+    }
+    header {
+      background: #16213e;
+      padding: 20px;
+      text-align: center;
+      border-bottom: 3px solid #0f3460;
+    }
+    header h1 { font-size: 1.8rem; color: #e94560; }
+    header p { color: #aaa; margin-top: 5px; }
+
+    .controls {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px;
+      justify-content: center;
+      align-items: center;
+      padding: 20px;
+      background: #16213e;
+      border-bottom: 2px solid #0f3460;
+    }
+    .controls label { font-weight: 600; }
+    .controls select, .controls button {
+      padding: 8px 16px;
+      border-radius: 6px;
+      border: none;
+      font-size: 0.95rem;
+      cursor: pointer;
+    }
+    .controls select {
+      background: #0f3460;
+      color: #eee;
+    }
+    .controls button {
+      background: #e94560;
+      color: #fff;
+      font-weight: 600;
+      transition: background 0.2s;
+    }
+    .controls button:hover { background: #c73650; }
+    .controls button.secondary {
+      background: #0f3460;
+    }
+    .controls button.secondary:hover { background: #1a4a8a; }
+
+    .quiz-container {
+      max-width: 900px;
+      margin: 20px auto;
+      padding: 0 15px;
+    }
+    .sheet-title {
+      text-align: center;
+      font-size: 1.3rem;
+      font-weight: 700;
+      color: #e94560;
+      margin: 20px 0 10px;
+      padding: 10px;
+      background: #16213e;
+      border-radius: 8px;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-bottom: 20px;
+      background: #16213e;
+      border-radius: 8px;
+      overflow: hidden;
+    }
+    th {
+      background: #0f3460;
+      padding: 10px 12px;
+      text-align: left;
+      font-size: 0.85rem;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+    td {
+      padding: 8px 12px;
+      border-bottom: 1px solid #1a1a2e;
+      font-size: 0.95rem;
+    }
+    tr:last-child td { border-bottom: none; }
+    tr:hover { background: #1e2a4a; }
+
+    input.quiz-input {
+      width: 100%;
+      padding: 6px 8px;
+      border: 2px solid #0f3460;
+      border-radius: 4px;
+      background: #1a1a2e;
+      color: #eee;
+      font-size: 0.95rem;
+      font-family: inherit;
+      transition: border-color 0.2s;
+    }
+    input.quiz-input:focus {
+      outline: none;
+      border-color: #e94560;
+    }
+    input.quiz-input.correct {
+      border-color: #2ecc71;
+      background: #1a3a2a;
+    }
+    input.quiz-input.incorrect {
+      border-color: #e74c3c;
+      background: #3a1a1a;
+    }
+
+    .score-bar {
+      text-align: center;
+      padding: 15px;
+      font-size: 1.1rem;
+      font-weight: 700;
+      background: #16213e;
+      border-radius: 8px;
+      margin: 10px auto;
+      max-width: 900px;
+    }
+    .score-bar .score-num { color: #2ecc71; }
+    .score-bar .score-total { color: #e94560; }
+
+    .section-label {
+      font-size: 0.85rem;
+      color: #888;
+      padding: 5px 12px;
+      background: #111;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+    }
+
+    @media (max-width: 600px) {
+      th, td { padding: 6px 8px; font-size: 0.85rem; }
+      input.quiz-input { font-size: 0.85rem; }
+    }
+  </style>
+</head>
+<body>
+
+<header>
+  <h1>ATC Sector Frequency Quiz</h1>
+  <p>Test your knowledge of sector IDs, names, and frequencies</p>
+</header>
+
+<div class="controls">
+  <label for="sheet-select">Sheet:</label>
+  <select id="sheet-select">
+    <option value="all">All Sheets</option>
+  </select>
+
+  <label for="mode-select">Mode:</label>
+  <select id="mode-select">
+    <option value="freq">Blank Frequencies</option>
+    <option value="random">Random Blank Column</option>
+  </select>
+
+  <button onclick="generateQuiz()">New Quiz</button>
+  <button class="secondary" onclick="checkAnswers()">Check Answers</button>
+  <button class="secondary" onclick="revealAnswers()">Reveal All</button>
+</div>
+
+<div class="score-bar" id="score-bar" style="display:none;">
+  Score: <span class="score-num" id="score-correct">0</span> / <span class="score-total" id="score-total">0</span>
+</div>
+
+<div class="quiz-container" id="quiz-container"></div>
+
+<script>
+const DATA = {
+  "22 MCN": {
+    main: { id: "22", name: "MCN", freq: "119.37/371.95" },
+    sections: [
+      {
+        label: "Sectors",
+        rows: [
+          { id: "04", name: "WEST", freq: "134.95/323.17" },
+          { id: "05", name: "DALAS", freq: "132.05/354.02" },
+          { id: "09", name: "TIROE", freq: "120.45/298.85" },
+          { id: "16", name: "EAST", freq: "134.2/290.475" },
+          { id: "19", name: "SINCA", freq: "123.95/269.625" },
+          { id: "21", name: "SOUTH", freq: "134.5/360.75" },
+          { id: "38", name: "NORTH", freq: "133.1/342.425" },
+          { id: "49", name: "LOGEN", freq: "121.35/377.05" },
+          { id: "J13", name: "ASH", freq: "134.45/227.12" },
+          { id: "J79", name: "BAXLY", freq: "133.7/323.3" },
+          { id: "J29", name: "AYS", freq: "127.57/269.02" },
+        ]
+      },
+      {
+        label: "",
+        rows: [
+          { id: "03", name: "GAD", freq: "128.72/350.32" },
+          { id: "06", name: "RQZ", freq: "133.17/299.2" },
+          { id: "10", name: "LGC", freq: "125.57/353.95" },
+          { id: "20", name: "DBN", freq: "126.42/307.05" },
+          { id: "32", name: "SPA", freq: "125.62/269.1" },
+          { id: "34", name: "GA HI", freq: "120.42/327.15" },
+          { id: "37", name: "CSV", freq: "126.67/363.1" },
+          { id: "39", name: "BURNE", freq: "125.92/269.17" },
+          { id: "50", name: "LANIER", freq: "124.37/353.92" },
+          { id: "J33", name: "GENEVA", freq: "125.05/360.8" },
+          { id: "J34", name: "SZW", freq: "128.07/307.2" },
+          { id: "J50", name: "AMG", freq: "135.97/282.3" },
+        ]
+      }
+    ]
+  },
+  "21 SOUTH": {
+    main: { id: "21", name: "SOUTH", freq: "134.5/360.75" },
+    sections: [
+      {
+        label: "Sectors",
+        rows: [
+          { id: "A1M", name: "MCN HI", freq: "119.6/316.1" },
+          { id: "A1M", name: "MCN LO", freq: "124.2/279.6" },
+          { id: "A1R", name: "CSG-HI", freq: "126.55/353.75" },
+          { id: "A1Z", name: "CSG-LO", freq: "125.5/323.1" },
+          { id: "A1S", name: "A80 DEPT", freq: "125.65/281.42" },
+          { id: "A1F", name: "SAT NW", freq: "121.0/268.7" },
+          { id: "A1P", name: "SAT NE", freq: "126.97/257.9" },
+          { id: "A1X", name: "SAT SW", freq: "119.8/343.6" },
+          { id: "A1N", name: "West Dept", freq: "133.47/281.42" },
+          { id: "A1H", name: "HUSKY", freq: "127.9/379.9" },
+          { id: "J", name: "VAD", freq: "125.47/269.4" },
+          { id: "", name: "WRB TWR", freq: "133.22/257.97" },
+        ]
+      },
+      {
+        label: "Adjacent",
+        rows: [
+          { id: "J29", name: "AYS", freq: "127.57/269.02" },
+          { id: "J12", name: "ABY", freq: "125.75/363.07" },
+        ]
+      },
+      {
+        label: "",
+        rows: [
+          { id: "04", name: "WEST", freq: "134.95/323.17" },
+          { id: "09", name: "TIROE", freq: "120.45/298.85" },
+          { id: "16", name: "EAST", freq: "134.2/290.475" },
+          { id: "19", name: "SINCA", freq: "123.95/269.625" },
+          { id: "J13", name: "ASH", freq: "134.45/227.12" },
+          { id: "J79", name: "BAXLY", freq: "133.7/323.3" },
+        ]
+      },
+      {
+        label: "",
+        rows: [
+          { id: "10", name: "LGC", freq: "125.57/353.95" },
+          { id: "20", name: "DBN", freq: "126.42/307.05" },
+          { id: "22", name: "MCN", freq: "119.37/371.95" },
+          { id: "03", name: "GAD", freq: "128.72/350.32" },
+          { id: "J34", name: "SZW", freq: "128.07/307.2" },
+          { id: "J33", name: "GEN", freq: "125.05/360.8" },
+          { id: "J50", name: "ALMA", freq: "135.97/282.3" },
+        ]
+      },
+      {
+        label: "",
+        rows: [
+          { id: "02", name: "GUN", freq: "126.82/354.05" },
+          { id: "08", name: "MLU", freq: "125.87/319.1" },
+          { id: "23", name: "CHU", freq: "124.32/360.62" },
+          { id: "27", name: "HAM", freq: "125.82/290.37" },
+          { id: "36", name: "ALU", freq: "124.87/257.67" },
+          { id: "40", name: "BUU", freq: "134.07/282.225" },
+          { id: "J49", name: "MGR", freq: "133.3/346.3" },
+        ]
+      }
+    ]
+  }
+};
+
+const columns = ["id", "name", "freq"];
+const colLabels = { id: "Sector #", name: "Name", freq: "Frequency" };
+
+let quizInputs = [];
+
+function generateQuiz() {
+  const sheetKey = document.getElementById("sheet-select").value;
+  const mode = document.getElementById("mode-select").value;
+  const container = document.getElementById("quiz-container");
+  container.innerHTML = "";
+  quizInputs = [];
+  document.getElementById("score-bar").style.display = "none";
+
+  const sheets = sheetKey === "all" ? Object.keys(DATA) : [sheetKey];
+
+  sheets.forEach(key => {
+    const sheet = DATA[key];
+
+    // Sheet title
+    const title = document.createElement("div");
+    title.className = "sheet-title";
+    title.textContent = key;
+    container.appendChild(title);
+
+    // Main row table
+    const mainTable = buildTable([sheet.main], mode, true);
+    container.appendChild(mainTable);
+
+    // Sections
+    sheet.sections.forEach(section => {
+      if (section.label) {
+        const lbl = document.createElement("div");
+        lbl.className = "section-label";
+        lbl.textContent = section.label;
+        container.appendChild(lbl);
+      }
+      const tbl = buildTable(section.rows, mode, false);
+      container.appendChild(tbl);
+    });
+  });
+}
+
+function buildTable(rows, mode, isMain) {
+  const table = document.createElement("table");
+  const thead = document.createElement("thead");
+  const headRow = document.createElement("tr");
+  columns.forEach(col => {
+    const th = document.createElement("th");
+    th.textContent = colLabels[col];
+    headRow.appendChild(th);
+  });
+  thead.appendChild(headRow);
+  table.appendChild(thead);
+
+  const tbody = document.createElement("tbody");
+  rows.forEach(row => {
+    const tr = document.createElement("tr");
+    let blankCol;
+    if (mode === "freq") {
+      blankCol = "freq";
+    } else {
+      // Random column — pick from columns that have data
+      const available = columns.filter(c => row[c] && row[c].toString().trim() !== "");
+      blankCol = available[Math.floor(Math.random() * available.length)];
+    }
+
+    columns.forEach(col => {
+      const td = document.createElement("td");
+      if (col === blankCol) {
+        const input = document.createElement("input");
+        input.type = "text";
+        input.className = "quiz-input";
+        input.dataset.answer = row[col];
+        input.placeholder = "?";
+        input.addEventListener("keydown", e => {
+          if (e.key === "Enter") {
+            e.preventDefault();
+            // Move to next input
+            const idx = quizInputs.indexOf(input);
+            if (idx >= 0 && idx < quizInputs.length - 1) {
+              quizInputs[idx + 1].focus();
+            } else {
+              checkAnswers();
+            }
+          }
+        });
+        td.appendChild(input);
+        quizInputs.push(input);
+      } else {
+        td.textContent = row[col];
+      }
+      tr.appendChild(td);
+    });
+    tbody.appendChild(tr);
+  });
+  table.appendChild(tbody);
+  return table;
+}
+
+function normalize(str) {
+  return str.toString().trim().toLowerCase().replace(/\s+/g, " ");
+}
+
+function checkAnswers() {
+  let correct = 0;
+  let total = quizInputs.length;
+
+  quizInputs.forEach(input => {
+    const answer = normalize(input.dataset.answer);
+    const userVal = normalize(input.value);
+    input.classList.remove("correct", "incorrect");
+    if (userVal === answer) {
+      input.classList.add("correct");
+      correct++;
+    } else if (userVal !== "") {
+      input.classList.add("incorrect");
+    }
+  });
+
+  const bar = document.getElementById("score-bar");
+  bar.style.display = "block";
+  document.getElementById("score-correct").textContent = correct;
+  document.getElementById("score-total").textContent = total;
+}
+
+function revealAnswers() {
+  quizInputs.forEach(input => {
+    input.value = input.dataset.answer;
+    input.classList.remove("incorrect");
+    input.classList.add("correct");
+  });
+  checkAnswers();
+}
+
+// Populate sheet selector
+(function init() {
+  const sel = document.getElementById("sheet-select");
+  Object.keys(DATA).forEach(key => {
+    const opt = document.createElement("option");
+    opt.value = key;
+    opt.textContent = key;
+    sel.appendChild(opt);
+  });
+  generateQuiz();
+})();
+</script>
+
+</body>
+</html>
