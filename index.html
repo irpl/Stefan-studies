@@ -489,6 +489,7 @@ function showFlashcard() {
   inputWrap.className = "fc-input-wrap";
   const input = document.createElement("input");
   input.type = "text";
+  input.inputMode = "decimal";
   input.className = "fc-input";
   input.placeholder = "Frequency?";
   input.autocomplete = "off";
@@ -585,6 +586,7 @@ function buildTable(rows, mode, isMain) {
       if (col === blankCol) {
         const input = document.createElement("input");
         input.type = "text";
+        if (col === "freq") input.inputMode = "decimal";
         input.className = "quiz-input";
         input.dataset.answer = row[col];
         input.placeholder = "?";
