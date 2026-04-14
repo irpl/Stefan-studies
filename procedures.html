@@ -346,6 +346,24 @@ const QUESTIONS = [
   { id: 28, type: "fill", q: "Atlanta Terminal southbound departures via entering ZJX50/ZJX49 will be cleared at ___ above FL240 unless coordinated.", a: "Westbound altitude" },
   { id: 29, type: "mcq", q: "From HAMPTON Sector, KCLT arrivals from the west must be cleared to maintain ___, pointed out to CLARK HILL and handed off to GEORGIA HIGH.", a: "FL350", pool: "fl" },
   { id: 30, type: "mcq", q: "The Athens West Area includes what altitude segments?", a: "FL240-FL290", options: ["FL240-FL290","FL240-FL270","FL200-FL290","FL290-FL350"] },
+  // --- Questions 31-45 ---
+  { id: 31, type: "fill", q: "The F-15 FCF MCN E aircraft will make the supersonic speed run on a direct course between MCN250052 and MCN120046 at ___.", a: "FL430B550" },
+  { id: 32, type: "fill", q: "For high performance approaches at KWRB and upon completion of a radar handoff and communications transfer, A80 Macon Sector has ___.", a: "Control to clear A/C for approach" },
+  { id: 33, type: "multi-select", q: "Required altimeter settings for the AUGUSTA sector (select all that apply):", a: ["AGS","MCN"], options: ["ATL","AGS","MCN","CSG","SAV","HXD","CAE"] },
+  { id: 34, type: "ordered", q: "Order the AIT procedure steps for aircraft departing A80 via GAIRY SID overflying IRQ:", steps: ["16 clear A/C to FL230","16 H/O to 24","24 accept and H/O to 20","16 transfer comms to 20"] },
+  { id: 35, type: "multi-fill", q: "Arrivals to KCAE at or above 11,000 feet must cross 35 miles west of ___ Vortac at ___ feet.", blanks: ["CAE","11,000"] },
+  { id: 36, type: "mcq", q: "Augusta ATCT must clear departing aircraft requesting 11,000 ft or above to maintain ___, and expect filed altitude 10 min after dep.", a: "10,000 ft", pool: "altitude-ft" },
+  { id: 37, type: "fill", q: "When Augusta ATCT uses non-discrete beacon codes, aircraft must be assigned code ___.", a: "4600", numeric: true },
+  { id: 38, type: "fill", q: "Aircraft landing KATL from the CLARK HILL Sector must be DUBLIN Sector's control for ___.", a: "Left turns direct SIITH/JJEDI" },
+  { id: "39a", parent: "Atlanta Center must advise/coordinate before activating the Bulldog MOA:", type: "mcq", q: "What must be obtained first?", a: "A release from A80 MCN Sector and AGS APCH", options: ["A release from A80 MCN Sector and AGS APCH","A release from A80 only","Clearance from ZTL 21","Notification from the pilot"] },
+  { id: "39b", parent: "Atlanta Center must advise/coordinate before activating the Bulldog MOA:", type: "fill", q: "List all sectors Atlanta Center must coordinate with (e.g., '16, 19, 20, J29, J79, J73'):", a: "16, 19, 20, J29, J79, J73" },
+  { id: "39c", parent: "Atlanta Center must advise/coordinate before activating the Bulldog MOA:", type: "multi-fill", q: "If activation exceeds FL230, also coordinate with two MORE sectors: ___ and ___.", blanks: ["J50","J66"] },
+  { id: 40, type: "ordered", q: "Order the AIT procedures on Atlanta RNAV South Departures that will enter LAGRANGE Sector:", steps: ["21 clear A/C FL230","21 H/O to 22","22 accept & enter at AOB FL280","22 H/O to 10","21 climb A/C and transfer comms to 10"] },
+  { id: 41, type: "fill", q: "When Bulldog A and B MOA's/ATCAA are used in conjunction, the block altitude limits are ___. (Instructors want the simple version.)", a: "500 ft AGL up to FL270" },
+  { id: 42, type: "fill", q: "The altitude limits of Bulldog A MOA are ___.", a: "500 AGL up to but not including 10,000 MSL" },
+  { id: 43, type: "fill", q: "The altitude limits when operations are conducted in Bulldog B MOA ONLY are ___.", a: "11,000 - 17,999 MSL" },
+  { id: 44, type: "fill", q: "The altitude limits of Bulldog D MOA are ___.", a: "500 AGL to 17,000 MSL" },
+  { id: 45, type: "fill", q: "If radio failure occurs after receiving a MOA/ATCAA clearance, the pilot must depart from ___ at the EFC time and proceed to destination at FL230 (or highest altitude of last assigned block if below FL230).", a: "KNINE" },
   /* INSERT_QUESTIONS_HERE */
 ];
 
