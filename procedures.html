@@ -684,6 +684,78 @@ function renderMultiSelect(q, container, onComplete) {
   };
 }
 
+function renderMatching(q, container, onComplete) {
+  const wrap = document.createElement('div');
+  wrap.className = 'match-rows';
+
+  const allValues = q.pairs.map(p => p[1]);
+  const uniqueValues = Array.from(new Set(allValues));
+  const optionList = shuffle(uniqueValues.slice());
+
+  const rows = q.pairs.map(([label, correctValue]) => {
+    const row = document.createElement('div');
+    row.className = 'match-row';
+    const labelEl = document.createElement('div');
+    labelEl.className = 'match-label';
+    labelEl.textContent = label;
+    row.appendChild(labelEl);
+
+    const select = document.createElement('select');
+    const blank = document.createElement('option');
+    blank.value = '';
+    blank.textContent = '— pick one —';
+    select.appendChild(blank);
+    optionList.forEach(v => {
+      const opt = document.createElement('option');
+      opt.value = v;
+      opt.textContent = v;
+      select.appendChild(opt);
+    });
+    row.appendChild(select);
+    wrap.appendChild(row);
+    return { row, select, label, correctValue };
+  });
+  container.appendChild(wrap);
+
+  const submitBtn = document.createElement('button');
+  submitBtn.className = 'submit-btn';
+  submitBtn.textContent = 'Submit';
+  container.appendChild(submitBtn);
+
+  let answered = false;
+  function submit() {
+    if (answered) return;
+    answered = true;
+    submitBtn.disabled = true;
+    let allCorrect = true;
+    rows.forEach(r => {
+      r.select.disabled = true;
+      const ok = normalize(r.select.value) === normalize(r.correctValue);
+      r.select.classList.add(ok ? 'correct' : 'incorrect');
+      if (!ok) allCorrect = false;
+    });
+    const userText = rows.map(r => r.label + ':' + (r.select.value || '_')).join(', ');
+    const correctText = rows.map(r => r.label + ':' + r.correctValue).join(', ');
+    onComplete(allCorrect, userText, correctText);
+  }
+  submitBtn.addEventListener('click', submit);
+
+  return {
+    reveal: () => {
+      if (answered) return;
+      answered = true;
+      submitBtn.disabled = true;
+      rows.forEach(r => {
+        r.select.value = r.correctValue;
+        r.select.disabled = true;
+        r.select.classList.add('correct');
+      });
+      const correctText = rows.map(r => r.label + ':' + r.correctValue).join(', ');
+      onComplete(false, '(revealed)', correctText);
+    }
+  };
+}
+
 function startQuiz() {
   // Placeholder until engine is added
   document.getElementById('card-container').innerHTML =
