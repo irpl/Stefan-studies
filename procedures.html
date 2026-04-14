@@ -600,6 +600,90 @@ function renderMCQ(q, container, onComplete) {
   };
 }
 
+function renderMultiSelect(q, container, onComplete) {
+  const wrap = document.createElement('div');
+  wrap.className = 'ms-options';
+
+  // Options: explicit q.options or correct answers + sampled distractors
+  let opts;
+  if (q.options && q.options.length) {
+    opts = q.options.slice();
+  } else if (q.pool) {
+    const wantDistractors = Math.max(3, q.a.length);
+    const distractors = sampleDistractors(q.pool, q.a[0], wantDistractors);
+    opts = [...q.a, ...distractors];
+  } else {
+    opts = q.a.slice();
+  }
+  // Ensure all correct answers are present
+  q.a.forEach(ans => {
+    if (!opts.some(o => normalize(o) === normalize(ans))) opts.push(ans);
+  });
+  // De-dup
+  const seen = new Set();
+  opts = opts.filter(o => {
+    const k = normalize(o);
+    if (seen.has(k)) return false;
+    seen.add(k);
+    return true;
+  });
+  opts = shuffle(opts);
+
+  const labels = opts.map(opt => {
+    const lbl = document.createElement('label');
+    const cb = document.createElement('input');
+    cb.type = 'checkbox';
+    cb.value = opt;
+    lbl.appendChild(cb);
+    const span = document.createElement('span');
+    span.textContent = opt;
+    lbl.appendChild(span);
+    wrap.appendChild(lbl);
+    return { lbl, cb, value: opt };
+  });
+  container.appendChild(wrap);
+
+  const submitBtn = document.createElement('button');
+  submitBtn.className = 'submit-btn';
+  submitBtn.textContent = 'Submit';
+  container.appendChild(submitBtn);
+
+  let answered = false;
+  function submit() {
+    if (answered) return;
+    answered = true;
+    const checked = labels.filter(l => l.cb.checked).map(l => l.value);
+    const correct = setEqual(checked, q.a);
+    submitBtn.disabled = true;
+    labels.forEach(l => {
+      l.cb.disabled = true;
+      const isCorrectAnswer = q.a.some(ans => normalize(ans) === normalize(l.value));
+      if (l.cb.checked && isCorrectAnswer) l.lbl.classList.add('correct');
+      else if (l.cb.checked && !isCorrectAnswer) l.lbl.classList.add('incorrect');
+      else if (!l.cb.checked && isCorrectAnswer) l.lbl.classList.add('missed');
+    });
+    onComplete(correct, checked.join(', ') || '(none)', q.a.join(', '));
+  }
+  submitBtn.addEventListener('click', submit);
+
+  return {
+    reveal: () => {
+      if (answered) return;
+      answered = true;
+      submitBtn.disabled = true;
+      labels.forEach(l => {
+        l.cb.disabled = true;
+        const isCorrectAnswer = q.a.some(ans => normalize(ans) === normalize(l.value));
+        if (isCorrectAnswer) {
+          l.cb.checked = true;
+          l.lbl.classList.add('correct');
+        }
+      });
+      onComplete(false, '(revealed)', q.a.join(', '));
+    }
+  };
+}
+
 function startQuiz() {
   // Placeholder until engine is added
   document.getElementById('card-container').innerHTML =
