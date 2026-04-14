@@ -379,6 +379,49 @@ function sampleDistractors(pool, correctAnswer, count) {
   return shuffle(candidates).slice(0, count);
 }
 
+// --- Renderers ---
+// Each renderer signature: (q, container, onComplete) => { reveal }
+// onComplete(correct, userText, correctText) is called once the user submits.
+
+function renderTF(q, container, onComplete) {
+  const wrap = document.createElement('div');
+  wrap.className = 'tf-buttons';
+  const btnTrue = document.createElement('button');
+  btnTrue.textContent = 'TRUE';
+  const btnFalse = document.createElement('button');
+  btnFalse.textContent = 'FALSE';
+  wrap.appendChild(btnTrue);
+  wrap.appendChild(btnFalse);
+  container.appendChild(wrap);
+
+  let answered = false;
+  function pick(value) {
+    if (answered) return;
+    answered = true;
+    const correct = (value === q.a);
+    btnTrue.disabled = true;
+    btnFalse.disabled = true;
+    const chosenBtn = value ? btnTrue : btnFalse;
+    const correctBtn = q.a ? btnTrue : btnFalse;
+    chosenBtn.classList.add(correct ? 'correct' : 'incorrect');
+    if (!correct) correctBtn.classList.add('correct');
+    onComplete(correct, value ? 'TRUE' : 'FALSE', q.a ? 'TRUE' : 'FALSE');
+  }
+  btnTrue.addEventListener('click', () => pick(true));
+  btnFalse.addEventListener('click', () => pick(false));
+
+  return {
+    reveal: () => {
+      if (answered) return;
+      answered = true;
+      btnTrue.disabled = true;
+      btnFalse.disabled = true;
+      (q.a ? btnTrue : btnFalse).classList.add('correct');
+      onComplete(false, '(revealed)', q.a ? 'TRUE' : 'FALSE');
+    }
+  };
+}
+
 function startQuiz() {
   // Placeholder until engine is added
   document.getElementById('card-container').innerHTML =
