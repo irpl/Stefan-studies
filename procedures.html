@@ -537,6 +537,69 @@ function renderMultiFill(q, container, onComplete) {
   };
 }
 
+function renderMCQ(q, container, onComplete) {
+  const wrap = document.createElement('div');
+  wrap.className = 'mcq-options';
+
+  // Build options: explicit q.options wins, else sample from pool
+  let opts;
+  if (q.options && q.options.length) {
+    opts = q.options.slice();
+  } else if (q.pool) {
+    const distractors = sampleDistractors(q.pool, q.a, 3);
+    opts = [q.a, ...distractors];
+  } else {
+    opts = [q.a];
+  }
+  // Ensure correct answer is present
+  if (!opts.some(o => normalize(o) === normalize(q.a))) {
+    opts.unshift(q.a);
+  }
+  // De-duplicate (keep first occurrence)
+  const seen = new Set();
+  opts = opts.filter(o => {
+    const k = normalize(o);
+    if (seen.has(k)) return false;
+    seen.add(k);
+    return true;
+  });
+  opts = shuffle(opts);
+
+  const buttons = opts.map(opt => {
+    const btn = document.createElement('button');
+    btn.textContent = opt;
+    wrap.appendChild(btn);
+    return { btn, value: opt };
+  });
+  container.appendChild(wrap);
+
+  let answered = false;
+  function pick(value, btn) {
+    if (answered) return;
+    answered = true;
+    const correct = normalize(value) === normalize(q.a);
+    buttons.forEach(b => { b.btn.disabled = true; });
+    btn.classList.add(correct ? 'correct' : 'incorrect');
+    if (!correct) {
+      const right = buttons.find(b => normalize(b.value) === normalize(q.a));
+      if (right) right.btn.classList.add('correct');
+    }
+    onComplete(correct, value, q.a);
+  }
+  buttons.forEach(b => b.btn.addEventListener('click', () => pick(b.value, b.btn)));
+
+  return {
+    reveal: () => {
+      if (answered) return;
+      answered = true;
+      buttons.forEach(b => { b.btn.disabled = true; });
+      const right = buttons.find(b => normalize(b.value) === normalize(q.a));
+      if (right) right.btn.classList.add('correct');
+      onComplete(false, '(revealed)', q.a);
+    }
+  };
+}
+
 function startQuiz() {
   // Placeholder until engine is added
   document.getElementById('card-container').innerHTML =
