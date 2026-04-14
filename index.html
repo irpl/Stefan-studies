@@ -17,9 +17,22 @@
       padding: 20px;
       text-align: center;
       border-bottom: 3px solid #2a3a2a;
+      position: relative;
     }
     header h1 { font-size: 1.8rem; color: #5a9a5a; }
     header p { color: #999; margin-top: 5px; }
+    header .nav-link {
+      position: absolute;
+      top: 20px;
+      right: 20px;
+      color: #8ab88a;
+      text-decoration: none;
+      font-size: 0.9rem;
+    }
+    header .nav-link:hover { color: #a5d6a7; }
+    @media (max-width: 600px) {
+      header .nav-link { position: static; display: block; margin-top: 10px; }
+    }
 
     .controls {
       display: flex;
@@ -233,6 +246,7 @@
 <header>
   <h1>ATC Sector Frequency Quiz</h1>
   <p>Test your knowledge of sector IDs, names, and frequencies</p>
+  <a href="procedures.html" class="nav-link">ATC Procedures &rarr;</a>
 </header>
 
 <div class="controls">
