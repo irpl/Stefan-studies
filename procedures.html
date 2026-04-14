@@ -756,14 +756,233 @@ function renderMatching(q, container, onComplete) {
   };
 }
 
-function startQuiz() {
-  // Placeholder until engine is added
-  document.getElementById('card-container').innerHTML =
-    '<div class="card-wrapper"><div class="card"><div class="question-text">Quiz engine not yet loaded. Add bites 3-11.</div></div></div>';
+function renderOrdered(q, container, onComplete) {
+  const wrap = document.createElement('div');
+  wrap.className = 'ordered-area';
+
+  const slotsEl = document.createElement('div');
+  slotsEl.className = 'ordered-slots';
+  wrap.appendChild(slotsEl);
+
+  const poolEl = document.createElement('div');
+  poolEl.className = 'step-pool';
+  wrap.appendChild(poolEl);
+  container.appendChild(wrap);
+
+  const placed = [];
+  const shuffledSteps = shuffle(q.steps);
+  let answered = false;
+
+  function renderSlots() {
+    slotsEl.innerHTML = '';
+    for (let i = 0; i < q.steps.length; i++) {
+      const slot = document.createElement('div');
+      slot.className = 'slot' + (placed[i] ? '' : ' empty');
+      const num = document.createElement('span');
+      num.className = 'slot-num';
+      num.textContent = (i + 1) + '.';
+      slot.appendChild(num);
+      const text = document.createElement('span');
+      text.textContent = placed[i] || '(empty)';
+      slot.appendChild(text);
+      slotsEl.appendChild(slot);
+    }
+  }
+
+  function renderPool() {
+    poolEl.innerHTML = '';
+    shuffledSteps.forEach(step => {
+      const btn = document.createElement('button');
+      btn.textContent = step;
+      btn.disabled = answered || placed.includes(step);
+      btn.addEventListener('click', () => {
+        if (answered || placed.includes(step)) return;
+        placed.push(step);
+        renderSlots();
+        renderPool();
+        if (placed.length === q.steps.length) submit();
+      });
+      poolEl.appendChild(btn);
+    });
+  }
+
+  renderSlots();
+  renderPool();
+
+  function submit() {
+    if (answered) return;
+    answered = true;
+    let allCorrect = true;
+    [...slotsEl.children].forEach((slot, i) => {
+      const ok = normalize(placed[i] || '') === normalize(q.steps[i]);
+      slot.classList.remove('empty');
+      slot.classList.add(ok ? 'correct' : 'incorrect');
+      if (!ok) allCorrect = false;
+    });
+    [...poolEl.children].forEach(btn => { btn.disabled = true; });
+    onComplete(allCorrect, placed.join(' → '), q.steps.join(' → '));
+  }
+
+  return {
+    reveal: () => {
+      if (answered) return;
+      answered = true;
+      placed.length = 0;
+      q.steps.forEach(s => placed.push(s));
+      renderSlots();
+      [...slotsEl.children].forEach(slot => {
+        slot.classList.remove('empty');
+        slot.classList.add('correct');
+      });
+      [...poolEl.children].forEach(btn => { btn.disabled = true; });
+      onComplete(false, '(revealed)', q.steps.join(' → '));
+    }
+  };
 }
 
-function revealCurrent() { /* added in engine bite */ }
+// --- Engine ---
+const RENDERERS = {
+  'tf': renderTF,
+  'fill': renderFill,
+  'multi-fill': renderMultiFill,
+  'mcq': renderMCQ,
+  'multi-select': renderMultiSelect,
+  'matching': renderMatching,
+  'ordered': renderOrdered
+};
 
+let currentReveal = null;
+
+function buildDeck(filter) {
+  let pool = QUESTIONS.slice();
+  if (filter && filter !== 'all') {
+    pool = pool.filter(q => q.type === filter);
+  }
+  return shuffle(pool);
+}
+
+function startQuiz() {
+  const filter = document.getElementById('filter-select').value;
+  POOLS = buildPools(QUESTIONS);
+  deck = buildDeck(filter);
+  cardIndex = 0;
+  correctCount = 0;
+  answeredCount = 0;
+  document.getElementById('score-bar').style.display = 'block';
+  updateScore();
+  if (deck.length === 0) {
+    document.getElementById('card-container').innerHTML =
+      '<div class="card-wrapper"><div class="card"><div class="question-text" style="text-align:center;">No questions yet — add data in bites 12–16, or pick a different filter.</div></div></div>';
+    return;
+  }
+  showCard();
+}
+
+function updateScore() {
+  document.getElementById('score-correct').textContent = correctCount;
+  document.getElementById('score-total').textContent = deck.length;
+}
+
+function showCard() {
+  const container = document.getElementById('card-container');
+  container.innerHTML = '';
+  currentReveal = null;
+
+  if (cardIndex >= deck.length) {
+    container.innerHTML =
+      '<div class="card-wrapper"><div class="card"><div class="question-text" style="text-align:center;">' +
+      'Quiz complete! Final score: ' + correctCount + ' / ' + deck.length +
+      '</div></div></div>';
+    return;
+  }
+
+  const q = deck[cardIndex];
+  const wrap = document.createElement('div');
+  wrap.className = 'card-wrapper';
+
+  const progress = document.createElement('div');
+  progress.className = 'card-progress';
+  progress.textContent = (cardIndex + 1) + ' / ' + deck.length + ' — ' + q.type;
+  wrap.appendChild(progress);
+
+  const card = document.createElement('div');
+  card.className = 'card';
+
+  if (q.parent) {
+    const ctx = document.createElement('div');
+    ctx.className = 'parent-context';
+    ctx.textContent = q.parent;
+    card.appendChild(ctx);
+  }
+
+  // Multi-fill renders the full sentence inline; skip the standalone q text
+  if (q.type !== 'multi-fill') {
+    const qText = document.createElement('div');
+    qText.className = 'question-text';
+    qText.textContent = q.q;
+    card.appendChild(qText);
+  }
+
+  const ctrls = document.createElement('div');
+  ctrls.className = 'controls-area';
+  card.appendChild(ctrls);
+
+  const fb = document.createElement('div');
+  fb.className = 'feedback';
+  fb.style.display = 'none';
+  card.appendChild(fb);
+
+  const navWrap = document.createElement('div');
+  navWrap.className = 'nav-buttons';
+  navWrap.style.display = 'none';
+  const nextBtn = document.createElement('button');
+  nextBtn.className = 'next';
+  nextBtn.textContent = (cardIndex < deck.length - 1) ? 'Next →' : 'Finish';
+  nextBtn.addEventListener('click', () => {
+    cardIndex++;
+    showCard();
+  });
+  navWrap.appendChild(nextBtn);
+  card.appendChild(navWrap);
+
+  function onComplete(correct, userText, correctText) {
+    answeredCount++;
+    if (correct) correctCount++;
+    updateScore();
+    fb.style.display = 'block';
+    fb.classList.remove('right', 'wrong');
+    if (correct) {
+      fb.classList.add('right');
+      fb.textContent = '✓ Correct!';
+    } else {
+      fb.classList.add('wrong');
+      fb.innerHTML = '✗ ' + (userText === '(revealed)' ? 'Revealed.' : 'Incorrect.') +
+        '<span class="answer-label">Answer: ' + correctText + '</span>';
+    }
+    navWrap.style.display = 'flex';
+    nextBtn.focus();
+  }
+
+  const renderer = RENDERERS[q.type];
+  if (renderer) {
+    const handle = renderer(q, ctrls, onComplete);
+    currentReveal = handle && handle.reveal;
+  } else {
+    ctrls.textContent = 'Unknown question type: ' + q.type;
+  }
+
+  wrap.appendChild(card);
+  container.appendChild(wrap);
+  window.scrollTo(0, 0);
+}
+
+function revealCurrent() {
+  if (currentReveal) currentReveal();
+}
+
+document.getElementById('filter-select').addEventListener('change', startQuiz);
+
+// Init on page load
 startQuiz();
 </script>
 
