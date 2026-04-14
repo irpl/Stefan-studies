@@ -1,0 +1,1087 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ATC Procedure Quiz</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background: #141a14;
+      color: #ddd;
+      min-height: 100vh;
+    }
+    header {
+      background: #1a211a;
+      padding: 20px;
+      text-align: center;
+      border-bottom: 3px solid #2a3a2a;
+      position: relative;
+    }
+    header h1 { font-size: 1.8rem; color: #5a9a5a; }
+    header p { color: #999; margin-top: 5px; }
+    header .nav-link {
+      position: absolute;
+      top: 20px;
+      left: 20px;
+      color: #8ab88a;
+      text-decoration: none;
+      font-size: 0.9rem;
+    }
+    header .nav-link:hover { color: #a5d6a7; }
+
+    .controls {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px;
+      justify-content: center;
+      align-items: center;
+      padding: 20px;
+      background: #1a211a;
+      border-bottom: 2px solid #2a3a2a;
+    }
+    .controls label { font-weight: 600; }
+    .controls select, .controls button {
+      padding: 8px 16px;
+      border-radius: 6px;
+      border: none;
+      font-size: 0.95rem;
+      cursor: pointer;
+      font-family: inherit;
+    }
+    .controls select { background: #2a3a2a; color: #ddd; }
+    .controls button {
+      background: #3a6b3a;
+      color: #fff;
+      font-weight: 600;
+      transition: background 0.2s;
+    }
+    .controls button:hover { background: #4a7d4a; }
+    .controls button.secondary { background: #2a3a2a; }
+    .controls button.secondary:hover { background: #354535; }
+
+    .score-bar {
+      text-align: center;
+      padding: 15px;
+      font-size: 1.1rem;
+      font-weight: 700;
+      background: #1a211a;
+      border-radius: 8px;
+      margin: 10px auto;
+      max-width: 700px;
+    }
+    .score-bar .score-num { color: #5a9a5a; }
+    .score-bar .score-total { color: #8ab88a; }
+
+    .card-wrapper {
+      max-width: 700px;
+      margin: 30px auto;
+      padding: 0 15px;
+      text-align: center;
+    }
+    .card-progress {
+      font-size: 0.9rem;
+      color: #888;
+      margin-bottom: 15px;
+    }
+    .card {
+      background: #1a211a;
+      border-radius: 12px;
+      padding: 30px 25px;
+      margin-bottom: 20px;
+      border: 2px solid #2a3a2a;
+      text-align: left;
+    }
+    .card .parent-context {
+      font-size: 0.9rem;
+      color: #888;
+      margin-bottom: 12px;
+      font-style: italic;
+      padding-bottom: 10px;
+      border-bottom: 1px dashed #2a3a2a;
+    }
+    .card .question-text {
+      font-size: 1.15rem;
+      color: #ddd;
+      margin-bottom: 20px;
+      line-height: 1.5;
+    }
+    .card .controls-area {
+      margin-top: 15px;
+    }
+    .feedback {
+      margin-top: 18px;
+      padding: 12px;
+      border-radius: 8px;
+      font-weight: 600;
+      text-align: center;
+    }
+    .feedback.right { background: #1a2a1a; color: #6dbb6d; border: 1px solid #4a8a4a; }
+    .feedback.wrong { background: #3a1a1a; color: #ff7a6a; border: 1px solid #e74c3c; }
+    .feedback .answer-label {
+      display: block;
+      font-size: 0.85rem;
+      color: #aaa;
+      margin-top: 6px;
+      font-weight: 400;
+    }
+
+    .nav-buttons {
+      display: flex;
+      justify-content: center;
+      gap: 10px;
+      margin-top: 18px;
+    }
+    .nav-buttons button {
+      padding: 10px 24px;
+      border-radius: 8px;
+      border: none;
+      font-size: 1rem;
+      font-weight: 600;
+      cursor: pointer;
+      font-family: inherit;
+      transition: background 0.2s;
+    }
+    .nav-buttons .next { background: #3a6b3a; color: #fff; }
+    .nav-buttons .next:hover { background: #4a7d4a; }
+    .nav-buttons .skip { background: #2a3a2a; color: #ddd; }
+    .nav-buttons .skip:hover { background: #354535; }
+
+    /* T/F buttons */
+    .tf-buttons { display: flex; gap: 12px; justify-content: center; }
+    .tf-buttons button {
+      flex: 1; max-width: 180px; padding: 18px 0;
+      font-size: 1.1rem; font-weight: 700;
+      border: 2px solid #2a3a2a; border-radius: 10px;
+      background: #141a14; color: #ddd; cursor: pointer;
+      font-family: inherit; transition: all 0.15s;
+    }
+    .tf-buttons button:hover:not(:disabled) { background: #1e261e; border-color: #5a9a5a; }
+    .tf-buttons button.correct { background: #1a3a1a; border-color: #4a8a4a; color: #6dbb6d; }
+    .tf-buttons button.incorrect { background: #3a1a1a; border-color: #e74c3c; color: #ff7a6a; }
+    .tf-buttons button:disabled { cursor: default; }
+
+    /* MCQ option buttons */
+    .mcq-options { display: flex; flex-direction: column; gap: 10px; }
+    .mcq-options button {
+      padding: 12px 16px; font-size: 1rem;
+      border: 2px solid #2a3a2a; border-radius: 8px;
+      background: #141a14; color: #ddd; cursor: pointer;
+      font-family: inherit; text-align: left; transition: all 0.15s;
+    }
+    .mcq-options button:hover:not(:disabled) { background: #1e261e; border-color: #5a9a5a; }
+    .mcq-options button.correct { background: #1a3a1a; border-color: #4a8a4a; color: #6dbb6d; }
+    .mcq-options button.incorrect { background: #3a1a1a; border-color: #e74c3c; color: #ff7a6a; }
+    .mcq-options button:disabled { cursor: default; }
+
+    /* Multi-select checkboxes */
+    .ms-options { display: flex; flex-direction: column; gap: 8px; }
+    .ms-options label {
+      display: flex; align-items: center; gap: 10px;
+      padding: 10px 14px; background: #141a14;
+      border: 2px solid #2a3a2a; border-radius: 8px;
+      cursor: pointer; transition: all 0.15s;
+    }
+    .ms-options label:hover { border-color: #5a9a5a; }
+    .ms-options label.correct { border-color: #4a8a4a; background: #1a3a1a; }
+    .ms-options label.incorrect { border-color: #e74c3c; background: #3a1a1a; }
+    .ms-options label.missed { border-color: #c79b3a; background: #2a2614; }
+    .ms-options input[type="checkbox"] { width: 18px; height: 18px; accent-color: #5a9a5a; }
+
+    /* Matching rows */
+    .match-rows { display: flex; flex-direction: column; gap: 8px; }
+    .match-row {
+      display: grid; grid-template-columns: 60px 1fr; gap: 12px; align-items: center;
+    }
+    .match-row .match-label {
+      text-align: center; font-weight: 700;
+      background: #2a3a2a; padding: 10px; border-radius: 6px; color: #5a9a5a;
+    }
+    .match-row select {
+      padding: 10px; background: #141a14; border: 2px solid #2a3a2a;
+      color: #ddd; border-radius: 6px; font-family: inherit; font-size: 0.95rem;
+    }
+    .match-row select.correct { border-color: #4a8a4a; background: #1a2a1a; }
+    .match-row select.incorrect { border-color: #e74c3c; background: #2a1a1a; }
+
+    /* Ordered steps */
+    .ordered-area .ordered-slots {
+      display: flex; flex-direction: column; gap: 8px; margin-bottom: 16px;
+      padding: 12px; background: #141a14; border: 2px dashed #2a3a2a;
+      border-radius: 8px; min-height: 60px;
+    }
+    .ordered-area .slot {
+      display: flex; align-items: center; gap: 10px;
+      padding: 10px; background: #1a211a; border-radius: 6px; border: 1px solid #2a3a2a;
+    }
+    .ordered-area .slot .slot-num { font-weight: 700; color: #5a9a5a; min-width: 24px; }
+    .ordered-area .slot.correct { border-color: #4a8a4a; background: #1a2a1a; }
+    .ordered-area .slot.incorrect { border-color: #e74c3c; background: #2a1a1a; }
+    .ordered-area .slot.empty { color: #555; font-style: italic; }
+    .ordered-area .step-pool { display: flex; flex-direction: column; gap: 8px; }
+    .ordered-area .step-pool button {
+      padding: 10px 14px; background: #141a14;
+      border: 2px solid #2a3a2a; border-radius: 6px; color: #ddd;
+      cursor: pointer; font-family: inherit; text-align: left; font-size: 0.95rem;
+    }
+    .ordered-area .step-pool button:hover:not(:disabled) {
+      border-color: #5a9a5a; background: #1e261e;
+    }
+    .ordered-area .step-pool button:disabled { opacity: 0.35; cursor: default; }
+
+    /* Inline input for multi-fill */
+    .inline-input {
+      display: inline-block; width: 110px; padding: 4px 8px;
+      border: 2px solid #2a3a2a; border-radius: 4px;
+      background: #141a14; color: #eee; font-size: 1rem; font-family: inherit;
+      margin: 0 4px;
+    }
+    .inline-input:focus { outline: none; border-color: #5a9a5a; }
+    .inline-input.correct { border-color: #4a8a4a; background: #1a2a1a; }
+    .inline-input.incorrect { border-color: #e74c3c; background: #3a1a1a; }
+
+    /* Single fill input */
+    .fill-input {
+      width: 100%; padding: 12px 14px;
+      border: 2px solid #2a3a2a; border-radius: 8px;
+      background: #141a14; color: #eee; font-size: 1rem; font-family: inherit;
+    }
+    .fill-input:focus { outline: none; border-color: #5a9a5a; }
+    .fill-input.correct { border-color: #4a8a4a; background: #1a2a1a; }
+    .fill-input.incorrect { border-color: #e74c3c; background: #3a1a1a; }
+
+    /* Submit button inside cards */
+    .submit-btn {
+      margin-top: 16px; padding: 10px 24px;
+      border-radius: 8px; border: none;
+      font-size: 1rem; font-weight: 600;
+      cursor: pointer; background: #3a6b3a; color: #fff;
+      font-family: inherit;
+    }
+    .submit-btn:hover:not(:disabled) { background: #4a7d4a; }
+    .submit-btn:disabled { opacity: 0.5; cursor: default; }
+
+    @media (max-width: 600px) {
+      header h1 { font-size: 1.4rem; }
+      header .nav-link { position: static; display: block; margin-bottom: 10px; }
+      .card { padding: 20px 15px; }
+      .card .question-text { font-size: 1rem; }
+    }
+  </style>
+</head>
+<body>
+
+<header>
+  <a href="index.html" class="nav-link">&larr; Sector Frequencies</a>
+  <h1>ATC Procedure Quiz</h1>
+  <p>Atlanta Center (ZTL) / A80 procedures &mdash; shuffled flashcards</p>
+</header>
+
+<div class="controls">
+  <label for="filter-select">Filter:</label>
+  <select id="filter-select">
+    <option value="all">All Types</option>
+    <option value="tf">True / False only</option>
+    <option value="fill">Fill-in only</option>
+    <option value="mcq">Multiple Choice only</option>
+    <option value="multi-select">Multi-Select only</option>
+    <option value="matching">Matching only</option>
+    <option value="ordered">Ordered Steps only</option>
+  </select>
+  <button onclick="startQuiz()">New Quiz</button>
+  <button class="secondary" onclick="revealCurrent()">Reveal</button>
+</div>
+
+<div class="score-bar" id="score-bar" style="display:none;">
+  Score: <span class="score-num" id="score-correct">0</span> / <span class="score-total" id="score-total">0</span>
+</div>
+
+<div id="card-container"></div>
+
+<script>
+// QUESTIONS array — populated in subsequent edits
+const QUESTIONS = [
+  // --- Questions 1-15 ---
+  { id: 1, type: "multi-fill", q: "Turbojets inbound to KMCN, KMAC, and KWRB operating at or above 11,000 feet must be cleared to cross 15 miles from KMCN at ___ and ___.", blanks: ["11,000 feet", "250 knots"] },
+  { id: 2, type: "fill", q: "Departures from KMCN requesting 11,000 feet or above must be cleared to ___ and told to expect their filed altitude 10 minutes after departure.", a: "10,000 feet", numeric: true },
+  { id: 3, type: "fill", q: "The altitude limits of restricted area R3002E are ___.", a: "8,000-14,000 feet" },
+  { id: 4, type: "mcq", q: "A80 South departures with a destination of KDAB or KSFB must be climbing to ___ or requested westbound altitude, if lower.", a: "FL320", pool: "fl" },
+  { id: 5, type: "fill", q: "Non-military aircraft landing KMCN and KWRB from ZJX must be ___.", a: "AOB FL230 descending to 11,000" },
+  { id: 6, type: "fill", q: "All prop departures from KATL must be cleared to ___ feet or requested altitude if lower.", a: "11,000", numeric: true },
+  { id: 7, type: "mcq", q: "Aircraft departing the Atlanta Terminal Area and landing KCHS/KJZI/KSAV/KHXD/KFLO requesting at or above FL230 must be assigned ___ as a final altitude.", a: "FL230", pool: "fl" },
+  { id: 8, type: "fill", q: "KABY arrivals transitioning from ZTL to ZJX must be descending to ___ feet.", a: "11,000", numeric: true },
+  { id: 9, type: "matching", q: "Match each sub-area of Restricted Area R3002 with its altitude limits:", pairs: [["A","SFC-4000"],["B","4000-8000"],["C","8000-14000"],["D","SFC-8000"],["E","8000-14000"],["F","14000-FL250"],["G","SFC-14000"]] },
+  { id: "10a", parent: "Turboprop/Prop aircraft inbound to airports south of KATL and KCTJ from the south:", type: "mcq", q: "Where must they be routed?", a: "Direct destination", options: ["Direct destination","Via the RNAV STAR","Via radar vectors","Via airway"] },
+  { id: "10b", parent: "Turboprop/Prop aircraft inbound to airports south of KATL and KCTJ from the south:", type: "mcq", q: "Where and at what altitude must they cross?", a: "20 miles from A80 ATL sector boundary at 11,000 ft", options: ["20 miles from A80 ATL sector boundary at 11,000 ft","10 miles from A80 ATL sector boundary at 11,000 ft","20 miles from A80 ATL sector boundary at 10,000 ft","30 miles from A80 ATL sector boundary at 11,000 ft"] },
+  { id: "10c", parent: "Turboprop/Prop aircraft inbound to airports south of KATL and KCTJ from the south:", type: "mcq", q: "Which sector takes them after handoff?", a: "A80 MCN Sector", options: ["A80 MCN Sector","A80 CSG Sector","A80 SOUTH Sector","ZTL 22"] },
+  { id: 11, type: "ordered", q: "Put these SINCA Sector steps in order — F-15 FCF departing KWRB requesting unrestricted climb to 15,000 ft MSL:", steps: ["APREQ w/21","Advise A80 that unrestricted climb to 15,000 ft w/in 5 mi radius of KWRB is approved","Advise A80 of EDCT if 19 or 21 unable to approve unrestricted climb"] },
+  { id: 12, type: "mcq", q: "Aircraft landing KGSP over flying the MACON sector must cross the MACON/SPARTANBURG boundary ___.", a: "AOB FL270", pool: "fl" },
+  { id: 13, type: "mcq", q: "Per the ZTL/ZJX LOA, inbounds to Shaw AFB (KSSC) must cross the center boundary at or below ___.", a: "FL230", pool: "fl" },
+  { id: 14, type: "fill", q: "RNAV Turbojet aircraft inbound to satellite airports north of KATL must enter A80 Atlanta Sector airspace from the south-east established on the appropriate STAR and cross TCP at ___.", a: "11,000 ft and 250K or less" },
+  { id: "15a", parent: "Arrivals to KLGC and KPIM from the north or northeast must be handled as follows:", type: "mcq", q: "What is one way to handle them?", a: "ZTL clear direct GRANT..KLGC/KPIM", options: ["ZTL clear direct GRANT..KLGC/KPIM","ZTL clear direct LGC","ZTL clear direct MACEY","Via the FLCON arrival"] },
+  { id: "15b", parent: "Arrivals to KLGC and KPIM from the north or northeast must be handled as follows:", type: "mcq", q: "What is the alternative (vector) handling?", a: "Vector A/C south of a point at least 40 NM from KATL", options: ["Vector A/C south of a point at least 40 NM from KATL","Vector A/C south of a point at least 20 NM from KATL","Vector A/C east of a point at least 40 NM from KATL","Vector A/C north of a point at least 40 NM from KATL"] },
+  // --- Questions 16-30 ---
+  { id: 16, type: "multi-fill", q: "Downwind (long-side) non-optimized profile descent turbojets landing KATL during an east op via SINCA must cross ___ NM from KATL (TCP) at ___ feet.", blanks: ["40", "14,000"] },
+  { id: 17, type: "fill", q: "Between 0500 and 0000 LCL: All arrival aircraft landing KATL must be established on the STAR ___.", a: "Prior to the TCP" },
+  { id: 18, type: "multi-fill", q: "Base leg (short-side) non-optimized profile descent turbojets landing KATL via a west op via SINCA must cross ___ NM from KATL at ___ feet and ___ knots.", blanks: ["40", "12,000", "250"] },
+  { id: 19, type: "multi-fill", q: "For high performance approaches at KWRB, ZTL is responsible for ___ and ___ prior to transferring communication to A80 MCN Sector.", blanks: ["Coordination", "point outs"] },
+  { id: "20a", parent: "KCLT arrivals transitioning through the DUBLIN Sector — procedures:", type: "mcq", q: "Aircraft on the BANKR STAR must cross PONZE at or below what FL?", a: "FL270", pool: "fl" },
+  { id: "20b", parent: "KCLT arrivals transitioning through the DUBLIN Sector — procedures:", type: "mcq", q: "Aircraft on the JOOLS STAR must cross JEENI at:", a: "FL240", pool: "fl" },
+  { id: "20c", parent: "KCLT arrivals transitioning through the DUBLIN Sector — procedures:", type: "tf", q: "Dublin sector will normally shortcut JOOLS arrivals.", a: false },
+  { id: "20d", parent: "KCLT arrivals transitioning through the DUBLIN Sector — procedures:", type: "fill", q: "CLT arrivals north of IRQ must be released for speed control and turns up to ___ degrees left/right to BANKR/DEBBT.", a: "30", numeric: true },
+  { id: 21, type: "fill", q: "DUBLIN and MACON Sectors must accomplish radar point-out procedures to the SPARTANBURG Sector on all aircraft that will transition the ___ when released.", a: "Athens West Area" },
+  { id: 22, type: "fill", q: "Aircraft entering the BURNE Sector from the MACON Sector must be assigned ___.", a: "Even altitude" },
+  { id: 23, type: "fill", q: "Advanced RNAV turbojet arrivals landing A80 Atlanta Sector Satellite airports north of ATL must be cleared via ___.", a: "The appropriate STAR and expect 11,000 ft" },
+  { id: 24, type: "multi-fill", q: "At the HAMPTON Sector, inappropriate altitude for direction of flight approval is NOT required for northbound aircraft into the ___ Sector, or southbound aircraft from the ___ Sector into HAMPTON and CLARK HILL Sectors.", blanks: ["Blue Ridge", "Blue Ridge"] },
+  { id: 25, type: "fill", q: "Aircraft operating at or above FL240 transitioning from ZJX50/ZJX49 to ZTL must be assigned ___.", a: "Eastbound (odd) altitude" },
+  { id: "26a", parent: "Aircraft inbound to KSAV/KSVN/KHXD from ZTL20/ZTL24 — routing options:", type: "mcq", q: "What is one route option?", a: "LOTTS..SAV..DIRECT", options: ["LOTTS..SAV..DIRECT","LOTTS..DIRECT","SAV..DIRECT","LOTTS..FLYNT..DIRECT"] },
+  { id: "26b", parent: "Aircraft inbound to KSAV/KSVN/KHXD from ZTL20/ZTL24 — routing options:", type: "mcq", q: "Altitude restriction for the LOTTS route?", a: "Cross LOTTS @11,000", options: ["Cross LOTTS @11,000","Cross LOTTS @14,000","Cross LOTTS AOB FL230","Cross LOTTS AOB FL190"] },
+  { id: "26c", parent: "Aircraft inbound to KSAV/KSVN/KHXD from ZTL20/ZTL24 — routing options:", type: "mcq", q: "What is the other route option?", a: "FIBRO..FLYNT..PLZZZ..DIRECT", options: ["FIBRO..FLYNT..PLZZZ..DIRECT","FIBRO..DIRECT","FIBRO..FLYNT..DIRECT","PLZZZ..FLYNT..DIRECT"] },
+  { id: "26d", parent: "Aircraft inbound to KSAV/KSVN/KHXD from ZTL20/ZTL24 — routing options:", type: "mcq", q: "Altitude restriction for the FIBRO route?", a: "AOB FL230 descending to FL190", options: ["AOB FL230 descending to FL190","AOB FL270 descending to FL230","Cross FIBRO @11,000","AOB FL240 descending to FL200"] },
+  { id: "27a", parent: "Turboprop/Prop aircraft inbound to airports in the Atlanta Terminal area north of ATL (incapable of RNAV STAR):", type: "mcq", q: "Near what waypoint are they vectored?", a: "WRGNZ waypoint", options: ["WRGNZ waypoint","GRANT waypoint","MACEY waypoint","FLCON waypoint"] },
+  { id: "27b", parent: "Turboprop/Prop aircraft inbound to airports in the Atlanta Terminal area north of ATL (incapable of RNAV STAR):", type: "mcq", q: "How is the heading coordinated?", a: "Heading verbally coordinated", options: ["Heading verbally coordinated","Via data link","Per the LOA","Not coordinated"] },
+  { id: "27c", parent: "Turboprop/Prop aircraft inbound to airports in the Atlanta Terminal area north of ATL (incapable of RNAV STAR):", type: "mcq", q: "Where and at what altitude must they cross?", a: "20 miles from A80 ATL boundary at 11,000", options: ["20 miles from A80 ATL boundary at 11,000","10 miles from A80 ATL boundary at 11,000","20 miles from A80 ATL boundary at 10,000","30 miles from A80 ATL boundary at 11,000"] },
+  { id: "27d", parent: "Turboprop/Prop aircraft inbound to airports in the Atlanta Terminal area north of ATL (incapable of RNAV STAR):", type: "mcq", q: "Which sector takes them after handoff?", a: "A80 MCN Sector", options: ["A80 MCN Sector","A80 ATL Sector","ZTL 22","A80 CSG Sector"] },
+  { id: 28, type: "fill", q: "Atlanta Terminal southbound departures via entering ZJX50/ZJX49 will be cleared at ___ above FL240 unless coordinated.", a: "Westbound altitude" },
+  { id: 29, type: "mcq", q: "From HAMPTON Sector, KCLT arrivals from the west must be cleared to maintain ___, pointed out to CLARK HILL and handed off to GEORGIA HIGH.", a: "FL350", pool: "fl" },
+  { id: 30, type: "mcq", q: "The Athens West Area includes what altitude segments?", a: "FL240-FL290", options: ["FL240-FL290","FL240-FL270","FL200-FL290","FL290-FL350"] },
+  // --- Questions 31-45 ---
+  { id: 31, type: "fill", q: "The F-15 FCF MCN E aircraft will make the supersonic speed run on a direct course between MCN250052 and MCN120046 at ___.", a: "FL430B550" },
+  { id: 32, type: "fill", q: "For high performance approaches at KWRB and upon completion of a radar handoff and communications transfer, A80 Macon Sector has ___.", a: "Control to clear A/C for approach" },
+  { id: 33, type: "multi-select", q: "Required altimeter settings for the AUGUSTA sector (select all that apply):", a: ["AGS","MCN"], options: ["ATL","AGS","MCN","CSG","SAV","HXD","CAE"] },
+  { id: 34, type: "ordered", q: "Order the AIT procedure steps for aircraft departing A80 via GAIRY SID overflying IRQ:", steps: ["16 clear A/C to FL230","16 H/O to 24","24 accept and H/O to 20","16 transfer comms to 20"] },
+  { id: 35, type: "multi-fill", q: "Arrivals to KCAE at or above 11,000 feet must cross 35 miles west of ___ Vortac at ___ feet.", blanks: ["CAE","11,000"] },
+  { id: 36, type: "mcq", q: "Augusta ATCT must clear departing aircraft requesting 11,000 ft or above to maintain ___, and expect filed altitude 10 min after dep.", a: "10,000 ft", pool: "altitude-ft" },
+  { id: 37, type: "fill", q: "When Augusta ATCT uses non-discrete beacon codes, aircraft must be assigned code ___.", a: "4600", numeric: true },
+  { id: 38, type: "fill", q: "Aircraft landing KATL from the CLARK HILL Sector must be DUBLIN Sector's control for ___.", a: "Left turns direct SIITH/JJEDI" },
+  { id: "39a", parent: "Atlanta Center must advise/coordinate before activating the Bulldog MOA:", type: "mcq", q: "What must be obtained first?", a: "A release from A80 MCN Sector and AGS APCH", options: ["A release from A80 MCN Sector and AGS APCH","A release from A80 only","Clearance from ZTL 21","Notification from the pilot"] },
+  { id: "39b", parent: "Atlanta Center must advise/coordinate before activating the Bulldog MOA:", type: "fill", q: "List all sectors Atlanta Center must coordinate with (e.g., '16, 19, 20, J29, J79, J73'):", a: "16, 19, 20, J29, J79, J73" },
+  { id: "39c", parent: "Atlanta Center must advise/coordinate before activating the Bulldog MOA:", type: "multi-fill", q: "If activation exceeds FL230, also coordinate with two MORE sectors: ___ and ___.", blanks: ["J50","J66"] },
+  { id: 40, type: "ordered", q: "Order the AIT procedures on Atlanta RNAV South Departures that will enter LAGRANGE Sector:", steps: ["21 clear A/C FL230","21 H/O to 22","22 accept & enter at AOB FL280","22 H/O to 10","21 climb A/C and transfer comms to 10"] },
+  { id: 41, type: "fill", q: "When Bulldog A and B MOA's/ATCAA are used in conjunction, the block altitude limits are ___. (Instructors want the simple version.)", a: "500 ft AGL up to FL270" },
+  { id: 42, type: "fill", q: "The altitude limits of Bulldog A MOA are ___.", a: "500 AGL up to but not including 10,000 MSL" },
+  { id: 43, type: "fill", q: "The altitude limits when operations are conducted in Bulldog B MOA ONLY are ___.", a: "11,000 - 17,999 MSL" },
+  { id: 44, type: "fill", q: "The altitude limits of Bulldog D MOA are ___.", a: "500 AGL to 17,000 MSL" },
+  { id: 45, type: "fill", q: "If radio failure occurs after receiving a MOA/ATCAA clearance, the pilot must depart from ___ at the EFC time and proceed to destination at FL230 (or highest altitude of last assigned block if below FL230).", a: "KNINE" },
+  // --- Questions 46-60 ---
+  { id: 46, type: "mcq", q: "Who assumes responsibility for separation of military aircraft operating in the Bulldog MOA/ATCAA?", a: "Military", options: ["Military","ATC","Pilot","Both Military and ATC"] },
+  { id: 47, type: "fill", q: "The missed approach procedure for the RNAV (GPS) RWY 14 approach at KSBO is ___.", a: "Climb to 2500 direct WINSI & hold" },
+  { id: 48, type: "multi-select", q: "The initial approach fix(es) for the RNAV (GPS) RWY 14 approach to KSBO (select all that apply):", a: ["ZEMPA","SADOC","IMASY"], options: ["ZEMPA","SADOC","IMASY","WINSI","KNINE","EDKIF","HELIO"] },
+  { id: 49, type: "multi-select", q: "Required altimeter settings for the SINCA sector (select all that apply):", a: ["ATL","AGS","MCN"], options: ["ATL","AGS","MCN","CSG","SAV","HXD","CAE"] },
+  { id: 50, type: "multi-select", q: "Required altimeter settings for the SOUTH DEPT sector (select all that apply):", a: ["ATL","MCN","CSG"], options: ["ATL","AGS","MCN","CSG","SAV","HXD","CAE"] },
+  { id: 51, type: "fill", q: "KJAX arrivals from Area 5 must be cleared to ___ prior to the MARTIN LAKE/HAMPTON boundary.", a: "Altitude below FL350, appropriate for direction of flight" },
+  { id: 52, type: "tf", q: "Pilot's Discretion descent (resulting from a crossing restriction) may be issued by SINCA for aircraft landing within the Atlanta Terminal Area, which are transitioning the DUBLIN sector without back coordination.", a: true },
+  { id: 53, type: "multi-fill", q: "From DUBLIN Sector, KGSP/KGYH/KGMU arrivals over flying IRQ must descend to ___ and handoff to the ___ sector.", blanks: ["FL240","Augusta"] },
+  { id: 54, type: "mcq", q: "From DUBLIN Sector, KJAX arrivals must cross the common center boundary ___.", a: "AOB FL260", pool: "fl" },
+  { id: 55, type: "fill", q: "From DUBLIN Sector, KAVL arrivals at or above FL250 must ___.", a: "Cross 95 mi south of KAVL AOB FL240 or cross PLYRR AOB FL240" },
+  { id: 56, type: "mcq", q: "KSAV arrivals that depart the Atlanta Terminal Area must be capped at ___.", a: "FL230", pool: "fl" },
+  { id: 57, type: "tf", q: "KRDU arrivals entering ZJX must be at or below FL330. If the aircraft departs the Atlanta Terminal Area then it must be at or below FL290, RAFDOF.", a: true },
+  { id: 58, type: "tf", q: "KATL Non-RNAV departures and Atlanta Satellite Departures via the SOUTH DEPT sector requesting at or below FL230 entering the TIROE sector must be assigned a heading to remain clear of TIROE. TIROE has control for turns to the west. TIROE must ensure aircraft enter their airspace prior to V323.", a: true },
+  { id: 59, type: "fill", q: "Arrivals to KLGC, KCSG, KPIM transitioning the SOUTH DEPT sector must be cleared by SOUTH DEPT to maintain ___ ft MSL and handed off to A80 CSG Sector.", a: "11,000", numeric: true },
+  { id: 60, type: "fill", q: "Aircraft departing A80's airspace that will enter SINCA after MCN (e.g., MCN DBN SAV or MCN DBN HXD) must be released for ___ to the SINCA sector.", a: "Left turns" },
+  // --- Questions 61-75 ---
+  { id: 61, type: "mcq", q: "The 'Gadsden East Area' is when Atlanta is on an ___ operation.", a: "East", options: ["East","West","North","South"] },
+  { id: 62, type: "mcq", q: "The 'Gadsden East Area' includes which altitude segments?", a: "FL240-FL270", options: ["FL240-FL270","FL240-FL290","FL270-FL290","FL200-FL270"] },
+  { id: 63, type: "fill", q: "KBHM arrivals above FL320 must be ___ prior to the LAGRANGE/HAMPTON boundary.", a: "at FL320" },
+  { id: 64, type: "fill", q: "Turboprop aircraft inbound to the Charlotte Terminal Area must cross ___ at 11,000 and handed off to UNARM Sector 31.", a: "GRD" },
+  { id: "65a", parent: "Non RNAV Turbo jet arrivals inbound to the Atlanta Satellite Airports north of ATL:", type: "mcq", q: "Near what waypoint are they vectored?", a: "WRGNZ waypoint", options: ["WRGNZ waypoint","GRANT","LOTTS","MACEY"] },
+  { id: "65b", parent: "Non RNAV Turbo jet arrivals inbound to the Atlanta Satellite Airports north of ATL:", type: "mcq", q: "At what altitude must they cross TCP?", a: "11,000", options: ["11,000","10,000","14,000","12,000"] },
+  { id: "65c", parent: "Non RNAV Turbo jet arrivals inbound to the Atlanta Satellite Airports north of ATL:", type: "mcq", q: "At what max speed must they cross TCP?", a: "250 knots or less", options: ["250 knots or less","250K or less","280 knots or less","210 knots or less"] },
+  { id: 66, type: "tf", q: "Approaches to KSBO conflict with Bulldog A airspace. MOA altitudes should be amended/restricted prior to issuing an IFR clearance to KSBO.", a: true },
+  { id: 67, type: "multi-select", q: "Arrivals to which airports must be released from EAST DEPT for control for right turns? (AUGUSTA sector ensures point outs to SINCA.)", a: ["KSAV","KJZL","KAGS","KDNL","KHQU","KHXD","KAIK"], options: ["KSAV","KJZL","KAGS","KDNL","KHQU","KHXD","KAIK","KATL","KCLT","KLGC","KPIM"] },
+  { id: 68, type: "mcq", q: "Aircraft departing the Atlanta Terminal Area and landing KCAE requesting at or above FL230 must be assigned ___ for a final.", a: "FL230", pool: "fl" },
+  { id: 69, type: "multi-fill", q: "When any portion of North Moody Complex is active, aircraft landing KFZG/KTMA/15J/KVAD/KVLD/KHOE must cross ___ at ___.", blanks: ["The MOA boundary","AOB 7000 ft"] },
+  { id: 70, type: "mcq", q: "Augusta Terminal area arrivals (KAGS, KAIK, KDNL, KHQU) from Area 6 GUNTER Sector must cross the HAMPTON/GUNTER boundary at or below ___.", a: "FL350", pool: "fl" },
+  { id: 71, type: "tf", q: "When Atlanta is on a west operation, AUGUSTA sector must clear ATL landing turboprop arrivals to cross BEYLO or 70 miles west of IRQ at 110.", a: true },
+  { id: 72, type: "multi-select", q: "Bulldog MOA/ATCAA airspace is within the lateral/vertical confines of which Sectors/Facilities?", a: ["AGS APCH","A80 MCN","19","24","20"], options: ["AGS APCH","A80 MCN","19","24","20","21","22","16","J29","J79"] },
+  { id: "73a", parent: "High altitude approaches to KWRB — holding fixes & penetration:", type: "mcq", q: "What is one holding fix and its altitude?", a: "EDKIF @ 2,600", options: ["EDKIF @ 2,600","EDKIF @ 14,000","EDKIF @ 16,000","HELIO @ 2,600"] },
+  { id: "73b", parent: "High altitude approaches to KWRB — holding fixes & penetration:", type: "mcq", q: "What is the other holding fix and its altitude?", a: "HELIO @ 14,000", options: ["HELIO @ 14,000","HELIO @ 2,600","HELIO @ 16,000","EDKIF @ 14,000"] },
+  { id: "73c", parent: "High altitude approaches to KWRB — holding fixes & penetration:", type: "mcq", q: "What is the penetration fix and altitude?", a: "INZAT @ 16,000", options: ["INZAT @ 16,000","INZAT @ 14,000","INZAT @ 2,600","WINSI @ 16,000"] },
+  { id: 74, type: "ordered", q: "Order the A80/ZTL procedure for FCF aircraft departing KWRB requesting unrestricted climb to 15,000 ft:", steps: ["KWRB ATCT advises A80 when A/C starts taxi","A80 obtains a release from 19","19 APREQs w/ 21","A/C must be on 19 frequency","ATL radar IDs A/C on initial contact"] },
+  { id: 75, type: "mcq", q: "When can T-Routes be utilized?", a: "Within A80 for overflight purposes only", options: ["Within A80 for overflight purposes only","Anytime for arrivals","Only with ZTL approval","For departures only"] },
+];
+
+// Engine state — populated in subsequent edits
+let deck = [];
+let cardIndex = 0;
+let correctCount = 0;
+let answeredCount = 0;
+
+// --- Helpers ---
+function shuffle(arr) {
+  const a = arr.slice();
+  for (let i = a.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [a[i], a[j]] = [a[j], a[i]];
+  }
+  return a;
+}
+
+function normalize(s) {
+  return String(s).trim().toLowerCase()
+    .replace(/\s+/g, ' ')
+    .replace(/[.,;:!?]+$/, '');
+}
+
+function normalizeNumeric(s) {
+  return String(s).trim().toLowerCase()
+    .replace(/[,\s]/g, '')
+    .replace(/(ft|feet|knots?|kts?)$/i, '');
+}
+
+function eq(a, b, numeric) {
+  if (numeric) return normalizeNumeric(a) === normalizeNumeric(b);
+  return normalize(a) === normalize(b);
+}
+
+function setEqual(a, b) {
+  if (a.length !== b.length) return false;
+  const an = a.map(normalize).sort();
+  const bn = b.map(normalize).sort();
+  return an.every((v, i) => v === bn[i]);
+}
+
+// Distractor pools — built from QUESTIONS data on init
+let POOLS = {};
+function buildPools(questions) {
+  const pools = {
+    fl: new Set(),
+    'altitude-ft': new Set(),
+    airport: new Set(),
+    sector: new Set()
+  };
+  for (const q of questions) {
+    const all = [];
+    if (typeof q.a === 'string') all.push(q.a);
+    if (Array.isArray(q.a)) all.push(...q.a.filter(x => typeof x === 'string'));
+    if (q.blanks) all.push(...q.blanks);
+    if (q.steps) all.push(...q.steps);
+    if (q.options) all.push(...q.options);
+    for (const v of all) {
+      if (typeof v !== 'string') continue;
+      const flMatch = v.match(/(?:AOB |At |Cross )?FL\d{2,3}(?:[-\/]FL\d{2,3})?/gi);
+      if (flMatch) flMatch.forEach(x => pools.fl.add(x.trim()));
+      const altMatch = v.match(/\b\d{1,3},\d{3}(?:\s*(?:ft|feet))?\b/gi);
+      if (altMatch) altMatch.forEach(x => pools['altitude-ft'].add(x.trim()));
+      const apMatch = v.match(/\bK[A-Z]{3}\b/g);
+      if (apMatch) apMatch.forEach(x => pools.airport.add(x));
+    }
+  }
+  return Object.fromEntries(Object.entries(pools).map(([k, v]) => [k, Array.from(v)]));
+}
+
+function sampleDistractors(pool, correctAnswer, count) {
+  const candidates = (POOLS[pool] || []).filter(x => normalize(x) !== normalize(correctAnswer));
+  return shuffle(candidates).slice(0, count);
+}
+
+// --- Renderers ---
+// Each renderer signature: (q, container, onComplete) => { reveal }
+// onComplete(correct, userText, correctText) is called once the user submits.
+
+function renderTF(q, container, onComplete) {
+  const wrap = document.createElement('div');
+  wrap.className = 'tf-buttons';
+  const btnTrue = document.createElement('button');
+  btnTrue.textContent = 'TRUE';
+  const btnFalse = document.createElement('button');
+  btnFalse.textContent = 'FALSE';
+  wrap.appendChild(btnTrue);
+  wrap.appendChild(btnFalse);
+  container.appendChild(wrap);
+
+  let answered = false;
+  function pick(value) {
+    if (answered) return;
+    answered = true;
+    const correct = (value === q.a);
+    btnTrue.disabled = true;
+    btnFalse.disabled = true;
+    const chosenBtn = value ? btnTrue : btnFalse;
+    const correctBtn = q.a ? btnTrue : btnFalse;
+    chosenBtn.classList.add(correct ? 'correct' : 'incorrect');
+    if (!correct) correctBtn.classList.add('correct');
+    onComplete(correct, value ? 'TRUE' : 'FALSE', q.a ? 'TRUE' : 'FALSE');
+  }
+  btnTrue.addEventListener('click', () => pick(true));
+  btnFalse.addEventListener('click', () => pick(false));
+
+  return {
+    reveal: () => {
+      if (answered) return;
+      answered = true;
+      btnTrue.disabled = true;
+      btnFalse.disabled = true;
+      (q.a ? btnTrue : btnFalse).classList.add('correct');
+      onComplete(false, '(revealed)', q.a ? 'TRUE' : 'FALSE');
+    }
+  };
+}
+
+function renderFill(q, container, onComplete) {
+  const input = document.createElement('input');
+  input.type = 'text';
+  input.className = 'fill-input';
+  input.placeholder = 'Type your answer...';
+  input.autocomplete = 'off';
+  if (q.numeric) input.inputMode = 'decimal';
+  container.appendChild(input);
+
+  const submitBtn = document.createElement('button');
+  submitBtn.className = 'submit-btn';
+  submitBtn.textContent = 'Submit';
+  container.appendChild(submitBtn);
+
+  let answered = false;
+  function submit() {
+    if (answered) return;
+    answered = true;
+    const userVal = input.value;
+    const correct = eq(userVal, q.a, q.numeric);
+    input.disabled = true;
+    submitBtn.disabled = true;
+    input.classList.add(correct ? 'correct' : 'incorrect');
+    onComplete(correct, userVal || '(blank)', q.a);
+  }
+  submitBtn.addEventListener('click', submit);
+  input.addEventListener('keydown', e => {
+    if (e.key === 'Enter') { e.preventDefault(); submit(); }
+  });
+  setTimeout(() => input.focus(), 50);
+
+  return {
+    reveal: () => {
+      if (answered) return;
+      answered = true;
+      input.value = q.a;
+      input.disabled = true;
+      submitBtn.disabled = true;
+      input.classList.add('correct');
+      onComplete(false, '(revealed)', q.a);
+    }
+  };
+}
+
+function renderMultiFill(q, container, onComplete) {
+  const para = document.createElement('p');
+  para.style.fontSize = '1.1rem';
+  para.style.lineHeight = '2.2';
+  para.style.color = '#ddd';
+  para.style.marginBottom = '8px';
+  const parts = q.q.split(/_{2,}/);
+  const inputs = [];
+  parts.forEach((part, i) => {
+    para.appendChild(document.createTextNode(part));
+    if (i < q.blanks.length) {
+      const input = document.createElement('input');
+      input.type = 'text';
+      input.className = 'inline-input';
+      input.autocomplete = 'off';
+      const ans = q.blanks[i];
+      if (/^[\d,.\s]+$/.test(ans)) input.inputMode = 'decimal';
+      para.appendChild(input);
+      inputs.push(input);
+    }
+  });
+  container.appendChild(para);
+
+  const submitBtn = document.createElement('button');
+  submitBtn.className = 'submit-btn';
+  submitBtn.textContent = 'Submit';
+  container.appendChild(submitBtn);
+
+  let answered = false;
+  function submit() {
+    if (answered) return;
+    answered = true;
+    let allCorrect = true;
+    const userVals = inputs.map(i => i.value);
+    inputs.forEach((input, i) => {
+      const isNumeric = /^[\d,.\s]+$/.test(q.blanks[i]);
+      const ok = eq(input.value, q.blanks[i], isNumeric);
+      input.disabled = true;
+      input.classList.add(ok ? 'correct' : 'incorrect');
+      if (!ok) allCorrect = false;
+    });
+    submitBtn.disabled = true;
+    onComplete(allCorrect, userVals.map(v => v || '_').join(' / '), q.blanks.join(' / '));
+  }
+  submitBtn.addEventListener('click', submit);
+  inputs.forEach((input, i) => {
+    input.addEventListener('keydown', e => {
+      if (e.key === 'Enter') {
+        e.preventDefault();
+        if (i < inputs.length - 1) inputs[i + 1].focus();
+        else submit();
+      }
+    });
+  });
+  setTimeout(() => inputs[0] && inputs[0].focus(), 50);
+
+  return {
+    reveal: () => {
+      if (answered) return;
+      answered = true;
+      inputs.forEach((input, i) => {
+        input.value = q.blanks[i];
+        input.disabled = true;
+        input.classList.add('correct');
+      });
+      submitBtn.disabled = true;
+      onComplete(false, '(revealed)', q.blanks.join(' / '));
+    }
+  };
+}
+
+function renderMCQ(q, container, onComplete) {
+  const wrap = document.createElement('div');
+  wrap.className = 'mcq-options';
+
+  // Build options: explicit q.options wins, else sample from pool
+  let opts;
+  if (q.options && q.options.length) {
+    opts = q.options.slice();
+  } else if (q.pool) {
+    const distractors = sampleDistractors(q.pool, q.a, 3);
+    opts = [q.a, ...distractors];
+  } else {
+    opts = [q.a];
+  }
+  // Ensure correct answer is present
+  if (!opts.some(o => normalize(o) === normalize(q.a))) {
+    opts.unshift(q.a);
+  }
+  // De-duplicate (keep first occurrence)
+  const seen = new Set();
+  opts = opts.filter(o => {
+    const k = normalize(o);
+    if (seen.has(k)) return false;
+    seen.add(k);
+    return true;
+  });
+  opts = shuffle(opts);
+
+  const buttons = opts.map(opt => {
+    const btn = document.createElement('button');
+    btn.textContent = opt;
+    wrap.appendChild(btn);
+    return { btn, value: opt };
+  });
+  container.appendChild(wrap);
+
+  let answered = false;
+  function pick(value, btn) {
+    if (answered) return;
+    answered = true;
+    const correct = normalize(value) === normalize(q.a);
+    buttons.forEach(b => { b.btn.disabled = true; });
+    btn.classList.add(correct ? 'correct' : 'incorrect');
+    if (!correct) {
+      const right = buttons.find(b => normalize(b.value) === normalize(q.a));
+      if (right) right.btn.classList.add('correct');
+    }
+    onComplete(correct, value, q.a);
+  }
+  buttons.forEach(b => b.btn.addEventListener('click', () => pick(b.value, b.btn)));
+
+  return {
+    reveal: () => {
+      if (answered) return;
+      answered = true;
+      buttons.forEach(b => { b.btn.disabled = true; });
+      const right = buttons.find(b => normalize(b.value) === normalize(q.a));
+      if (right) right.btn.classList.add('correct');
+      onComplete(false, '(revealed)', q.a);
+    }
+  };
+}
+
+function renderMultiSelect(q, container, onComplete) {
+  const wrap = document.createElement('div');
+  wrap.className = 'ms-options';
+
+  // Options: explicit q.options or correct answers + sampled distractors
+  let opts;
+  if (q.options && q.options.length) {
+    opts = q.options.slice();
+  } else if (q.pool) {
+    const wantDistractors = Math.max(3, q.a.length);
+    const distractors = sampleDistractors(q.pool, q.a[0], wantDistractors);
+    opts = [...q.a, ...distractors];
+  } else {
+    opts = q.a.slice();
+  }
+  // Ensure all correct answers are present
+  q.a.forEach(ans => {
+    if (!opts.some(o => normalize(o) === normalize(ans))) opts.push(ans);
+  });
+  // De-dup
+  const seen = new Set();
+  opts = opts.filter(o => {
+    const k = normalize(o);
+    if (seen.has(k)) return false;
+    seen.add(k);
+    return true;
+  });
+  opts = shuffle(opts);
+
+  const labels = opts.map(opt => {
+    const lbl = document.createElement('label');
+    const cb = document.createElement('input');
+    cb.type = 'checkbox';
+    cb.value = opt;
+    lbl.appendChild(cb);
+    const span = document.createElement('span');
+    span.textContent = opt;
+    lbl.appendChild(span);
+    wrap.appendChild(lbl);
+    return { lbl, cb, value: opt };
+  });
+  container.appendChild(wrap);
+
+  const submitBtn = document.createElement('button');
+  submitBtn.className = 'submit-btn';
+  submitBtn.textContent = 'Submit';
+  container.appendChild(submitBtn);
+
+  let answered = false;
+  function submit() {
+    if (answered) return;
+    answered = true;
+    const checked = labels.filter(l => l.cb.checked).map(l => l.value);
+    const correct = setEqual(checked, q.a);
+    submitBtn.disabled = true;
+    labels.forEach(l => {
+      l.cb.disabled = true;
+      const isCorrectAnswer = q.a.some(ans => normalize(ans) === normalize(l.value));
+      if (l.cb.checked && isCorrectAnswer) l.lbl.classList.add('correct');
+      else if (l.cb.checked && !isCorrectAnswer) l.lbl.classList.add('incorrect');
+      else if (!l.cb.checked && isCorrectAnswer) l.lbl.classList.add('missed');
+    });
+    onComplete(correct, checked.join(', ') || '(none)', q.a.join(', '));
+  }
+  submitBtn.addEventListener('click', submit);
+
+  return {
+    reveal: () => {
+      if (answered) return;
+      answered = true;
+      submitBtn.disabled = true;
+      labels.forEach(l => {
+        l.cb.disabled = true;
+        const isCorrectAnswer = q.a.some(ans => normalize(ans) === normalize(l.value));
+        if (isCorrectAnswer) {
+          l.cb.checked = true;
+          l.lbl.classList.add('correct');
+        }
+      });
+      onComplete(false, '(revealed)', q.a.join(', '));
+    }
+  };
+}
+
+function renderMatching(q, container, onComplete) {
+  const wrap = document.createElement('div');
+  wrap.className = 'match-rows';
+
+  const allValues = q.pairs.map(p => p[1]);
+  const uniqueValues = Array.from(new Set(allValues));
+  const optionList = shuffle(uniqueValues.slice());
+
+  const rows = q.pairs.map(([label, correctValue]) => {
+    const row = document.createElement('div');
+    row.className = 'match-row';
+    const labelEl = document.createElement('div');
+    labelEl.className = 'match-label';
+    labelEl.textContent = label;
+    row.appendChild(labelEl);
+
+    const select = document.createElement('select');
+    const blank = document.createElement('option');
+    blank.value = '';
+    blank.textContent = '— pick one —';
+    select.appendChild(blank);
+    optionList.forEach(v => {
+      const opt = document.createElement('option');
+      opt.value = v;
+      opt.textContent = v;
+      select.appendChild(opt);
+    });
+    row.appendChild(select);
+    wrap.appendChild(row);
+    return { row, select, label, correctValue };
+  });
+  container.appendChild(wrap);
+
+  const submitBtn = document.createElement('button');
+  submitBtn.className = 'submit-btn';
+  submitBtn.textContent = 'Submit';
+  container.appendChild(submitBtn);
+
+  let answered = false;
+  function submit() {
+    if (answered) return;
+    answered = true;
+    submitBtn.disabled = true;
+    let allCorrect = true;
+    rows.forEach(r => {
+      r.select.disabled = true;
+      const ok = normalize(r.select.value) === normalize(r.correctValue);
+      r.select.classList.add(ok ? 'correct' : 'incorrect');
+      if (!ok) allCorrect = false;
+    });
+    const userText = rows.map(r => r.label + ':' + (r.select.value || '_')).join(', ');
+    const correctText = rows.map(r => r.label + ':' + r.correctValue).join(', ');
+    onComplete(allCorrect, userText, correctText);
+  }
+  submitBtn.addEventListener('click', submit);
+
+  return {
+    reveal: () => {
+      if (answered) return;
+      answered = true;
+      submitBtn.disabled = true;
+      rows.forEach(r => {
+        r.select.value = r.correctValue;
+        r.select.disabled = true;
+        r.select.classList.add('correct');
+      });
+      const correctText = rows.map(r => r.label + ':' + r.correctValue).join(', ');
+      onComplete(false, '(revealed)', correctText);
+    }
+  };
+}
+
+function renderOrdered(q, container, onComplete) {
+  const wrap = document.createElement('div');
+  wrap.className = 'ordered-area';
+
+  const slotsEl = document.createElement('div');
+  slotsEl.className = 'ordered-slots';
+  wrap.appendChild(slotsEl);
+
+  const poolEl = document.createElement('div');
+  poolEl.className = 'step-pool';
+  wrap.appendChild(poolEl);
+  container.appendChild(wrap);
+
+  const placed = [];
+  const shuffledSteps = shuffle(q.steps);
+  let answered = false;
+
+  function renderSlots() {
+    slotsEl.innerHTML = '';
+    for (let i = 0; i < q.steps.length; i++) {
+      const slot = document.createElement('div');
+      slot.className = 'slot' + (placed[i] ? '' : ' empty');
+      const num = document.createElement('span');
+      num.className = 'slot-num';
+      num.textContent = (i + 1) + '.';
+      slot.appendChild(num);
+      const text = document.createElement('span');
+      text.textContent = placed[i] || '(empty)';
+      slot.appendChild(text);
+      slotsEl.appendChild(slot);
+    }
+  }
+
+  function renderPool() {
+    poolEl.innerHTML = '';
+    shuffledSteps.forEach(step => {
+      const btn = document.createElement('button');
+      btn.textContent = step;
+      btn.disabled = answered || placed.includes(step);
+      btn.addEventListener('click', () => {
+        if (answered || placed.includes(step)) return;
+        placed.push(step);
+        renderSlots();
+        renderPool();
+        if (placed.length === q.steps.length) submit();
+      });
+      poolEl.appendChild(btn);
+    });
+  }
+
+  renderSlots();
+  renderPool();
+
+  function submit() {
+    if (answered) return;
+    answered = true;
+    let allCorrect = true;
+    [...slotsEl.children].forEach((slot, i) => {
+      const ok = normalize(placed[i] || '') === normalize(q.steps[i]);
+      slot.classList.remove('empty');
+      slot.classList.add(ok ? 'correct' : 'incorrect');
+      if (!ok) allCorrect = false;
+    });
+    [...poolEl.children].forEach(btn => { btn.disabled = true; });
+    onComplete(allCorrect, placed.join(' → '), q.steps.join(' → '));
+  }
+
+  return {
+    reveal: () => {
+      if (answered) return;
+      answered = true;
+      placed.length = 0;
+      q.steps.forEach(s => placed.push(s));
+      renderSlots();
+      [...slotsEl.children].forEach(slot => {
+        slot.classList.remove('empty');
+        slot.classList.add('correct');
+      });
+      [...poolEl.children].forEach(btn => { btn.disabled = true; });
+      onComplete(false, '(revealed)', q.steps.join(' → '));
+    }
+  };
+}
+
+// --- Engine ---
+const RENDERERS = {
+  'tf': renderTF,
+  'fill': renderFill,
+  'multi-fill': renderMultiFill,
+  'mcq': renderMCQ,
+  'multi-select': renderMultiSelect,
+  'matching': renderMatching,
+  'ordered': renderOrdered
+};
+
+let currentReveal = null;
+
+function buildDeck(filter) {
+  let pool = QUESTIONS.slice();
+  if (filter && filter !== 'all') {
+    pool = pool.filter(q => q.type === filter);
+  }
+  return shuffle(pool);
+}
+
+function startQuiz() {
+  const filter = document.getElementById('filter-select').value;
+  POOLS = buildPools(QUESTIONS);
+  deck = buildDeck(filter);
+  cardIndex = 0;
+  correctCount = 0;
+  answeredCount = 0;
+  document.getElementById('score-bar').style.display = 'block';
+  updateScore();
+  if (deck.length === 0) {
+    document.getElementById('card-container').innerHTML =
+      '<div class="card-wrapper"><div class="card"><div class="question-text" style="text-align:center;">No questions yet — add data in bites 12–16, or pick a different filter.</div></div></div>';
+    return;
+  }
+  showCard();
+}
+
+function updateScore() {
+  document.getElementById('score-correct').textContent = correctCount;
+  document.getElementById('score-total').textContent = deck.length;
+}
+
+function showCard() {
+  const container = document.getElementById('card-container');
+  container.innerHTML = '';
+  currentReveal = null;
+
+  if (cardIndex >= deck.length) {
+    container.innerHTML =
+      '<div class="card-wrapper"><div class="card"><div class="question-text" style="text-align:center;">' +
+      'Quiz complete! Final score: ' + correctCount + ' / ' + deck.length +
+      '</div></div></div>';
+    return;
+  }
+
+  const q = deck[cardIndex];
+  const wrap = document.createElement('div');
+  wrap.className = 'card-wrapper';
+
+  const progress = document.createElement('div');
+  progress.className = 'card-progress';
+  progress.textContent = (cardIndex + 1) + ' / ' + deck.length + ' — ' + q.type;
+  wrap.appendChild(progress);
+
+  const card = document.createElement('div');
+  card.className = 'card';
+
+  if (q.parent) {
+    const ctx = document.createElement('div');
+    ctx.className = 'parent-context';
+    ctx.textContent = q.parent;
+    card.appendChild(ctx);
+  }
+
+  // Multi-fill renders the full sentence inline; skip the standalone q text
+  if (q.type !== 'multi-fill') {
+    const qText = document.createElement('div');
+    qText.className = 'question-text';
+    qText.textContent = q.q;
+    card.appendChild(qText);
+  }
+
+  const ctrls = document.createElement('div');
+  ctrls.className = 'controls-area';
+  card.appendChild(ctrls);
+
+  const fb = document.createElement('div');
+  fb.className = 'feedback';
+  fb.style.display = 'none';
+  card.appendChild(fb);
+
+  const navWrap = document.createElement('div');
+  navWrap.className = 'nav-buttons';
+  navWrap.style.display = 'none';
+  const nextBtn = document.createElement('button');
+  nextBtn.className = 'next';
+  nextBtn.textContent = (cardIndex < deck.length - 1) ? 'Next →' : 'Finish';
+  nextBtn.addEventListener('click', () => {
+    cardIndex++;
+    showCard();
+  });
+  navWrap.appendChild(nextBtn);
+  card.appendChild(navWrap);
+
+  function onComplete(correct, userText, correctText) {
+    answeredCount++;
+    if (correct) correctCount++;
+    updateScore();
+    fb.style.display = 'block';
+    fb.classList.remove('right', 'wrong');
+    if (correct) {
+      fb.classList.add('right');
+      fb.textContent = '✓ Correct!';
+    } else {
+      fb.classList.add('wrong');
+      fb.innerHTML = '✗ ' + (userText === '(revealed)' ? 'Revealed.' : 'Incorrect.') +
+        '<span class="answer-label">Answer: ' + correctText + '</span>';
+    }
+    navWrap.style.display = 'flex';
+    nextBtn.focus();
+  }
+
+  const renderer = RENDERERS[q.type];
+  if (renderer) {
+    const handle = renderer(q, ctrls, onComplete);
+    currentReveal = handle && handle.reveal;
+  } else {
+    ctrls.textContent = 'Unknown question type: ' + q.type;
+  }
+
+  wrap.appendChild(card);
+  container.appendChild(wrap);
+  window.scrollTo(0, 0);
+}
+
+function revealCurrent() {
+  if (currentReveal) currentReveal();
+}
+
+document.getElementById('filter-select').addEventListener('change', startQuiz);
+
+// Init on page load
+startQuiz();
+</script>
+
+</body>
+</html>

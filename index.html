@@ -1,0 +1,681 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ATC Frequency Quiz</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background: #141a14;
+      color: #ddd;
+      min-height: 100vh;
+    }
+    header {
+      background: #1a211a;
+      padding: 20px;
+      text-align: center;
+      border-bottom: 3px solid #2a3a2a;
+      position: relative;
+    }
+    header h1 { font-size: 1.8rem; color: #5a9a5a; }
+    header p { color: #999; margin-top: 5px; }
+    header .nav-link {
+      position: absolute;
+      top: 20px;
+      right: 20px;
+      color: #8ab88a;
+      text-decoration: none;
+      font-size: 0.9rem;
+    }
+    header .nav-link:hover { color: #a5d6a7; }
+    @media (max-width: 600px) {
+      header .nav-link { position: static; display: block; margin-top: 10px; }
+    }
+
+    .controls {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px;
+      justify-content: center;
+      align-items: center;
+      padding: 20px;
+      background: #1a211a;
+      border-bottom: 2px solid #2a3a2a;
+    }
+    .controls label { font-weight: 600; }
+    .controls select, .controls button {
+      padding: 8px 16px;
+      border-radius: 6px;
+      border: none;
+      font-size: 0.95rem;
+      cursor: pointer;
+    }
+    .controls select {
+      background: #2a3a2a;
+      color: #ddd;
+    }
+    .controls button {
+      background: #3a6b3a;
+      color: #fff;
+      font-weight: 600;
+      transition: background 0.2s;
+    }
+    .controls button:hover { background: #4a7d4a; }
+    .controls button.secondary {
+      background: #2a3a2a;
+    }
+    .controls button.secondary:hover { background: #354535; }
+
+    .quiz-container {
+      max-width: 900px;
+      margin: 20px auto;
+      padding: 0 15px;
+    }
+    .sheet-title {
+      text-align: center;
+      font-size: 1.3rem;
+      font-weight: 700;
+      color: #5a9a5a;
+      margin: 20px 0 10px;
+      padding: 10px;
+      background: #1a211a;
+      border-radius: 8px;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-bottom: 20px;
+      background: #1a211a;
+      border-radius: 8px;
+      overflow: hidden;
+    }
+    th {
+      background: #2a3a2a;
+      padding: 10px 12px;
+      text-align: left;
+      font-size: 0.85rem;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+    td {
+      padding: 8px 12px;
+      border-bottom: 1px solid #141a14;
+      font-size: 0.95rem;
+    }
+    tr:last-child td { border-bottom: none; }
+    tr:hover { background: #1e261e; }
+
+    input.quiz-input {
+      width: 100%;
+      padding: 6px 8px;
+      border: 2px solid #2a3a2a;
+      border-radius: 4px;
+      background: #141a14;
+      color: #eee;
+      font-size: 0.95rem;
+      font-family: inherit;
+      transition: border-color 0.2s;
+    }
+    input.quiz-input:focus {
+      outline: none;
+      border-color: #5a9a5a;
+    }
+    input.quiz-input.correct {
+      border-color: #4a8a4a;
+      background: #1a2a1a;
+    }
+    input.quiz-input.incorrect {
+      border-color: #e74c3c;
+      background: #3a1a1a;
+    }
+
+    .score-bar {
+      text-align: center;
+      padding: 15px;
+      font-size: 1.1rem;
+      font-weight: 700;
+      background: #1a211a;
+      border-radius: 8px;
+      margin: 10px auto;
+      max-width: 900px;
+    }
+    .score-bar .score-num { color: #5a9a5a; }
+    .score-bar .score-total { color: #8ab88a; }
+
+    .section-label {
+      font-size: 0.85rem;
+      color: #888;
+      padding: 5px 12px;
+      background: #111;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+    }
+
+    /* Flashcard styles */
+    .flashcard-wrapper {
+      max-width: 500px;
+      margin: 40px auto;
+      padding: 0 15px;
+      text-align: center;
+    }
+    .flashcard-progress {
+      font-size: 0.9rem;
+      color: #888;
+      margin-bottom: 15px;
+    }
+    .flashcard {
+      background: #1a211a;
+      border-radius: 12px;
+      padding: 40px 30px;
+      margin-bottom: 20px;
+      border: 2px solid #2a3a2a;
+    }
+    .flashcard .fc-sector {
+      font-size: 1.1rem;
+      color: #888;
+      margin-bottom: 8px;
+    }
+    .flashcard .fc-name {
+      font-size: 2rem;
+      font-weight: 700;
+      color: #ddd;
+      margin-bottom: 25px;
+    }
+    .flashcard .fc-input-wrap {
+      display: flex;
+      gap: 10px;
+      justify-content: center;
+      align-items: center;
+    }
+    .flashcard .fc-input {
+      width: 180px;
+      padding: 10px 14px;
+      border: 2px solid #2a3a2a;
+      border-radius: 8px;
+      background: #141a14;
+      color: #eee;
+      font-size: 1.2rem;
+      font-family: inherit;
+      text-align: center;
+    }
+    .flashcard .fc-input:focus {
+      outline: none;
+      border-color: #5a9a5a;
+    }
+    .flashcard .fc-input.correct { border-color: #4a8a4a; background: #1a2a1a; }
+    .flashcard .fc-input.incorrect { border-color: #e74c3c; background: #3a1a1a; }
+    .fc-feedback {
+      min-height: 30px;
+      font-size: 1rem;
+      font-weight: 600;
+      margin-top: 15px;
+    }
+    .fc-feedback.right { color: #5a9a5a; }
+    .fc-feedback.wrong { color: #e74c3c; }
+    .fc-buttons {
+      display: flex;
+      gap: 10px;
+      justify-content: center;
+    }
+    .fc-buttons button {
+      padding: 10px 24px;
+      border-radius: 8px;
+      border: none;
+      font-size: 1rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+    .fc-buttons .fc-submit { background: #3a6b3a; color: #fff; }
+    .fc-buttons .fc-submit:hover { background: #4a7d4a; }
+    .fc-buttons .fc-skip { background: #2a3a2a; color: #ddd; }
+    .fc-buttons .fc-skip:hover { background: #354535; }
+
+    @media (max-width: 600px) {
+      th, td { padding: 6px 8px; font-size: 0.85rem; }
+      input.quiz-input { font-size: 0.85rem; }
+      .flashcard .fc-name { font-size: 1.5rem; }
+      .flashcard .fc-input { width: 140px; font-size: 1rem; }
+    }
+  </style>
+</head>
+<body>
+
+<header>
+  <h1>ATC Sector Frequency Quiz</h1>
+  <p>Test your knowledge of sector IDs, names, and frequencies</p>
+  <a href="procedures.html" class="nav-link">ATC Procedures &rarr;</a>
+</header>
+
+<div class="controls">
+  <label for="sheet-select">Sheet:</label>
+  <select id="sheet-select">
+    <option value="all">All Sheets</option>
+  </select>
+
+  <label for="mode-select">Mode:</label>
+  <select id="mode-select">
+    <option value="flashcard">Flashcards (Shuffled)</option>
+    <option value="freq">Blank Frequencies (Table)</option>
+    <option value="random">Random Blank Column (Table)</option>
+  </select>
+
+  <button onclick="generateQuiz()">New Quiz</button>
+  <button class="secondary" onclick="checkAnswers()">Check Answers</button>
+  <button class="secondary" onclick="revealAnswers()">Reveal All</button>
+</div>
+
+<div class="score-bar" id="score-bar" style="display:none;">
+  Score: <span class="score-num" id="score-correct">0</span> / <span class="score-total" id="score-total">0</span>
+</div>
+
+<div class="quiz-container" id="quiz-container"></div>
+
+<script>
+const DATA = {
+  "22 MCN": {
+    main: { id: "22", name: "MCN", freq: "119.37" },
+    sections: [
+      {
+        label: "Sectors",
+        rows: [
+          { id: "04", name: "WEST", freq: "134.95" },
+          { id: "05", name: "DALAS", freq: "132.05" },
+          { id: "09", name: "TIROE", freq: "120.45" },
+          { id: "16", name: "EAST", freq: "134.2" },
+          { id: "19", name: "SINCA", freq: "123.95" },
+          { id: "21", name: "SOUTH", freq: "134.5" },
+          { id: "38", name: "NORTH", freq: "133.1" },
+          { id: "49", name: "LOGEN", freq: "121.35" },
+          { id: "J13", name: "ASH", freq: "134.45" },
+          { id: "J79", name: "BAXLY", freq: "133.7" },
+          { id: "J29", name: "AYS", freq: "127.57" },
+        ]
+      },
+      {
+        label: "",
+        rows: [
+          { id: "03", name: "GAD", freq: "128.72" },
+          { id: "06", name: "RQZ", freq: "133.17" },
+          { id: "10", name: "LGC", freq: "125.57" },
+          { id: "20", name: "DBN", freq: "126.42" },
+          { id: "32", name: "SPA", freq: "125.62" },
+          { id: "34", name: "GA HI", freq: "120.42" },
+          { id: "37", name: "CSV", freq: "126.67" },
+          { id: "39", name: "BURNE", freq: "125.92" },
+          { id: "50", name: "LANIER", freq: "124.37" },
+          { id: "J33", name: "GENEVA", freq: "125.05" },
+          { id: "J34", name: "SZW", freq: "128.07" },
+          { id: "J50", name: "AMG", freq: "135.97" },
+        ]
+      }
+    ]
+  },
+  "21 SOUTH": {
+    main: { id: "21", name: "SOUTH", freq: "134.5" },
+    sections: [
+      {
+        label: "Sectors",
+        rows: [
+          { id: "A1M", name: "MCN HI", freq: "119.6" },
+          { id: "A1M", name: "MCN LO", freq: "124.2" },
+          { id: "A1R", name: "CSG-HI", freq: "126.55" },
+          { id: "A1Z", name: "CSG-LO", freq: "125.5" },
+          { id: "A1S", name: "A80 DEPT", freq: "125.65" },
+          { id: "A1F", name: "SAT NW", freq: "121.0" },
+          { id: "A1P", name: "SAT NE", freq: "126.97" },
+          { id: "A1X", name: "SAT SW", freq: "119.8" },
+          { id: "A1N", name: "West Dept", freq: "133.47" },
+          { id: "A1H", name: "HUSKY", freq: "127.9" },
+          { id: "J", name: "VAD", freq: "125.47" },
+          { id: "", name: "WRB TWR", freq: "133.22" },
+        ]
+      },
+      {
+        label: "Adjacent",
+        rows: [
+          { id: "J29", name: "AYS", freq: "127.57" },
+          { id: "J12", name: "ABY", freq: "125.75" },
+        ]
+      },
+      {
+        label: "",
+        rows: [
+          { id: "04", name: "WEST", freq: "134.95" },
+          { id: "09", name: "TIROE", freq: "120.45" },
+          { id: "16", name: "EAST", freq: "134.2" },
+          { id: "19", name: "SINCA", freq: "123.95" },
+          { id: "J13", name: "ASH", freq: "134.45" },
+          { id: "J79", name: "BAXLY", freq: "133.7" },
+        ]
+      },
+      {
+        label: "",
+        rows: [
+          { id: "10", name: "LGC", freq: "125.57" },
+          { id: "20", name: "DBN", freq: "126.42" },
+          { id: "22", name: "MCN", freq: "119.37" },
+          { id: "03", name: "GAD", freq: "128.72" },
+          { id: "J34", name: "SZW", freq: "128.07" },
+          { id: "J33", name: "GEN", freq: "125.05" },
+          { id: "J50", name: "ALMA", freq: "135.97" },
+        ]
+      },
+      {
+        label: "",
+        rows: [
+          { id: "02", name: "GUN", freq: "126.82" },
+          { id: "08", name: "MLU", freq: "125.87" },
+          { id: "23", name: "CHU", freq: "124.32" },
+          { id: "27", name: "HAM", freq: "125.82" },
+          { id: "36", name: "ALU", freq: "124.87" },
+          { id: "40", name: "BUU", freq: "134.07" },
+          { id: "J49", name: "MGR", freq: "133.3" },
+        ]
+      }
+    ]
+  }
+};
+
+const columns = ["id", "name", "freq"];
+const colLabels = { id: "Sector #", name: "Name", freq: "Frequency" };
+
+let quizInputs = [];
+
+// Flashcard state
+let fcCards = [];
+let fcIndex = 0;
+let fcCorrect = 0;
+let fcAnswered = 0;
+
+function shuffle(arr) {
+  for (let i = arr.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [arr[i], arr[j]] = [arr[j], arr[i]];
+  }
+  return arr;
+}
+
+function getAllRows(sheetKey) {
+  const sheets = sheetKey === "all" ? Object.keys(DATA) : [sheetKey];
+  const rows = [];
+  sheets.forEach(key => {
+    const sheet = DATA[key];
+    rows.push(sheet.main);
+    sheet.sections.forEach(s => rows.push(...s.rows));
+  });
+  return rows;
+}
+
+function generateQuiz() {
+  const sheetKey = document.getElementById("sheet-select").value;
+  const mode = document.getElementById("mode-select").value;
+  const container = document.getElementById("quiz-container");
+  container.innerHTML = "";
+  quizInputs = [];
+  document.getElementById("score-bar").style.display = "none";
+
+  if (mode === "flashcard") {
+    generateFlashcards(sheetKey);
+    return;
+  }
+
+  const sheets = sheetKey === "all" ? Object.keys(DATA) : [sheetKey];
+
+  sheets.forEach(key => {
+    const sheet = DATA[key];
+
+    // Sheet title
+    const title = document.createElement("div");
+    title.className = "sheet-title";
+    title.textContent = key;
+    container.appendChild(title);
+
+    // Main row table
+    const mainTable = buildTable([sheet.main], mode, true);
+    container.appendChild(mainTable);
+
+    // Sections
+    sheet.sections.forEach(section => {
+      if (section.label) {
+        const lbl = document.createElement("div");
+        lbl.className = "section-label";
+        lbl.textContent = section.label;
+        container.appendChild(lbl);
+      }
+      const tbl = buildTable(section.rows, mode, false);
+      container.appendChild(tbl);
+    });
+  });
+}
+
+function generateFlashcards(sheetKey) {
+  fcCards = shuffle(getAllRows(sheetKey));
+  fcIndex = 0;
+  fcCorrect = 0;
+  fcAnswered = 0;
+  showFlashcard();
+}
+
+function showFlashcard() {
+  const container = document.getElementById("quiz-container");
+  container.innerHTML = "";
+  const bar = document.getElementById("score-bar");
+
+  if (fcIndex >= fcCards.length) {
+    // Done — show final score
+    bar.style.display = "block";
+    document.getElementById("score-correct").textContent = fcCorrect;
+    document.getElementById("score-total").textContent = fcCards.length;
+    container.innerHTML = '<div class="flashcard-wrapper"><div class="flashcard"><div class="fc-name">All done!</div><div class="fc-feedback right">' + fcCorrect + ' / ' + fcCards.length + ' correct</div></div></div>';
+    return;
+  }
+
+  bar.style.display = "block";
+  document.getElementById("score-correct").textContent = fcCorrect;
+  document.getElementById("score-total").textContent = fcCards.length;
+
+  const card = fcCards[fcIndex];
+  const wrap = document.createElement("div");
+  wrap.className = "flashcard-wrapper";
+
+  const progress = document.createElement("div");
+  progress.className = "flashcard-progress";
+  progress.textContent = (fcIndex + 1) + " / " + fcCards.length;
+  wrap.appendChild(progress);
+
+  const fc = document.createElement("div");
+  fc.className = "flashcard";
+
+  const sector = document.createElement("div");
+  sector.className = "fc-sector";
+  sector.textContent = card.id ? "Sector " + card.id : "";
+  fc.appendChild(sector);
+
+  const name = document.createElement("div");
+  name.className = "fc-name";
+  name.textContent = card.name;
+  fc.appendChild(name);
+
+  const inputWrap = document.createElement("div");
+  inputWrap.className = "fc-input-wrap";
+  const input = document.createElement("input");
+  input.type = "text";
+  input.inputMode = "decimal";
+  input.className = "fc-input";
+  input.placeholder = "Frequency?";
+  input.autocomplete = "off";
+  inputWrap.appendChild(input);
+  fc.appendChild(inputWrap);
+
+  const feedback = document.createElement("div");
+  feedback.className = "fc-feedback";
+  fc.appendChild(feedback);
+
+  wrap.appendChild(fc);
+
+  const btns = document.createElement("div");
+  btns.className = "fc-buttons";
+
+  const submitBtn = document.createElement("button");
+  submitBtn.className = "fc-submit";
+  submitBtn.textContent = "Submit";
+  btns.appendChild(submitBtn);
+
+  const skipBtn = document.createElement("button");
+  skipBtn.className = "fc-skip";
+  skipBtn.textContent = "Skip";
+  btns.appendChild(skipBtn);
+
+  wrap.appendChild(btns);
+  container.appendChild(wrap);
+  input.focus();
+
+  let answered = false;
+
+  function submit() {
+    if (answered) { fcIndex++; showFlashcard(); return; }
+    const userVal = normalize(input.value);
+    const answer = normalize(card.freq);
+    answered = true;
+    fcAnswered++;
+    if (userVal === answer) {
+      fcCorrect++;
+      input.classList.add("correct");
+      feedback.className = "fc-feedback right";
+      feedback.textContent = "Correct!";
+    } else {
+      input.classList.add("incorrect");
+      feedback.className = "fc-feedback wrong";
+      feedback.textContent = "Answer: " + card.freq;
+    }
+    document.getElementById("score-correct").textContent = fcCorrect;
+    submitBtn.textContent = "Next";
+  }
+
+  function skip() {
+    if (answered) { fcIndex++; showFlashcard(); return; }
+    answered = true;
+    fcAnswered++;
+    feedback.className = "fc-feedback wrong";
+    feedback.textContent = "Answer: " + card.freq;
+    submitBtn.textContent = "Next";
+  }
+
+  submitBtn.addEventListener("click", submit);
+  skipBtn.addEventListener("click", skip);
+  input.addEventListener("keydown", e => {
+    if (e.key === "Enter") { e.preventDefault(); submit(); }
+  });
+}
+
+function buildTable(rows, mode, isMain) {
+  const table = document.createElement("table");
+  const thead = document.createElement("thead");
+  const headRow = document.createElement("tr");
+  columns.forEach(col => {
+    const th = document.createElement("th");
+    th.textContent = colLabels[col];
+    headRow.appendChild(th);
+  });
+  thead.appendChild(headRow);
+  table.appendChild(thead);
+
+  const tbody = document.createElement("tbody");
+  rows.forEach(row => {
+    const tr = document.createElement("tr");
+    let blankCol;
+    if (mode === "freq") {
+      blankCol = "freq";
+    } else {
+      // Random column — pick from columns that have data
+      const available = columns.filter(c => row[c] && row[c].toString().trim() !== "");
+      blankCol = available[Math.floor(Math.random() * available.length)];
+    }
+
+    columns.forEach(col => {
+      const td = document.createElement("td");
+      if (col === blankCol) {
+        const input = document.createElement("input");
+        input.type = "text";
+        if (col === "freq") input.inputMode = "decimal";
+        input.className = "quiz-input";
+        input.dataset.answer = row[col];
+        input.placeholder = "?";
+        input.addEventListener("keydown", e => {
+          if (e.key === "Enter") {
+            e.preventDefault();
+            // Move to next input
+            const idx = quizInputs.indexOf(input);
+            if (idx >= 0 && idx < quizInputs.length - 1) {
+              quizInputs[idx + 1].focus();
+            } else {
+              checkAnswers();
+            }
+          }
+        });
+        td.appendChild(input);
+        quizInputs.push(input);
+      } else {
+        td.textContent = row[col];
+      }
+      tr.appendChild(td);
+    });
+    tbody.appendChild(tr);
+  });
+  table.appendChild(tbody);
+  return table;
+}
+
+function normalize(str) {
+  return str.toString().trim().toLowerCase().replace(/\s+/g, " ");
+}
+
+function checkAnswers() {
+  let correct = 0;
+  let total = quizInputs.length;
+
+  quizInputs.forEach(input => {
+    const answer = normalize(input.dataset.answer);
+    const userVal = normalize(input.value);
+    input.classList.remove("correct", "incorrect");
+    if (userVal === answer) {
+      input.classList.add("correct");
+      correct++;
+    } else if (userVal !== "") {
+      input.classList.add("incorrect");
+    }
+  });
+
+  const bar = document.getElementById("score-bar");
+  bar.style.display = "block";
+  document.getElementById("score-correct").textContent = correct;
+  document.getElementById("score-total").textContent = total;
+}
+
+function revealAnswers() {
+  quizInputs.forEach(input => {
+    input.value = input.dataset.answer;
+    input.classList.remove("incorrect");
+    input.classList.add("correct");
+  });
+  checkAnswers();
+}
+
+// Populate sheet selector
+(function init() {
+  const sel = document.getElementById("sheet-select");
+  Object.keys(DATA).forEach(key => {
+    const opt = document.createElement("option");
+    opt.value = key;
+    opt.textContent = key;
+    sel.appendChild(opt);
+  });
+  generateQuiz();
+})();
+</script>
+
+</body>
+</html>
