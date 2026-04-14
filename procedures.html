@@ -466,6 +466,77 @@ function renderFill(q, container, onComplete) {
   };
 }
 
+function renderMultiFill(q, container, onComplete) {
+  const para = document.createElement('p');
+  para.style.fontSize = '1.1rem';
+  para.style.lineHeight = '2.2';
+  para.style.color = '#ddd';
+  para.style.marginBottom = '8px';
+  const parts = q.q.split(/_{2,}/);
+  const inputs = [];
+  parts.forEach((part, i) => {
+    para.appendChild(document.createTextNode(part));
+    if (i < q.blanks.length) {
+      const input = document.createElement('input');
+      input.type = 'text';
+      input.className = 'inline-input';
+      input.autocomplete = 'off';
+      const ans = q.blanks[i];
+      if (/^[\d,.\s]+$/.test(ans)) input.inputMode = 'decimal';
+      para.appendChild(input);
+      inputs.push(input);
+    }
+  });
+  container.appendChild(para);
+
+  const submitBtn = document.createElement('button');
+  submitBtn.className = 'submit-btn';
+  submitBtn.textContent = 'Submit';
+  container.appendChild(submitBtn);
+
+  let answered = false;
+  function submit() {
+    if (answered) return;
+    answered = true;
+    let allCorrect = true;
+    const userVals = inputs.map(i => i.value);
+    inputs.forEach((input, i) => {
+      const isNumeric = /^[\d,.\s]+$/.test(q.blanks[i]);
+      const ok = eq(input.value, q.blanks[i], isNumeric);
+      input.disabled = true;
+      input.classList.add(ok ? 'correct' : 'incorrect');
+      if (!ok) allCorrect = false;
+    });
+    submitBtn.disabled = true;
+    onComplete(allCorrect, userVals.map(v => v || '_').join(' / '), q.blanks.join(' / '));
+  }
+  submitBtn.addEventListener('click', submit);
+  inputs.forEach((input, i) => {
+    input.addEventListener('keydown', e => {
+      if (e.key === 'Enter') {
+        e.preventDefault();
+        if (i < inputs.length - 1) inputs[i + 1].focus();
+        else submit();
+      }
+    });
+  });
+  setTimeout(() => inputs[0] && inputs[0].focus(), 50);
+
+  return {
+    reveal: () => {
+      if (answered) return;
+      answered = true;
+      inputs.forEach((input, i) => {
+        input.value = q.blanks[i];
+        input.disabled = true;
+        input.classList.add('correct');
+      });
+      submitBtn.disabled = true;
+      onComplete(false, '(revealed)', q.blanks.join(' / '));
+    }
+  };
+}
+
 function startQuiz() {
   // Placeholder until engine is added
   document.getElementById('card-container').innerHTML =
