@@ -422,6 +422,50 @@ function renderTF(q, container, onComplete) {
   };
 }
 
+function renderFill(q, container, onComplete) {
+  const input = document.createElement('input');
+  input.type = 'text';
+  input.className = 'fill-input';
+  input.placeholder = 'Type your answer...';
+  input.autocomplete = 'off';
+  if (q.numeric) input.inputMode = 'decimal';
+  container.appendChild(input);
+
+  const submitBtn = document.createElement('button');
+  submitBtn.className = 'submit-btn';
+  submitBtn.textContent = 'Submit';
+  container.appendChild(submitBtn);
+
+  let answered = false;
+  function submit() {
+    if (answered) return;
+    answered = true;
+    const userVal = input.value;
+    const correct = eq(userVal, q.a, q.numeric);
+    input.disabled = true;
+    submitBtn.disabled = true;
+    input.classList.add(correct ? 'correct' : 'incorrect');
+    onComplete(correct, userVal || '(blank)', q.a);
+  }
+  submitBtn.addEventListener('click', submit);
+  input.addEventListener('keydown', e => {
+    if (e.key === 'Enter') { e.preventDefault(); submit(); }
+  });
+  setTimeout(() => input.focus(), 50);
+
+  return {
+    reveal: () => {
+      if (answered) return;
+      answered = true;
+      input.value = q.a;
+      input.disabled = true;
+      submitBtn.disabled = true;
+      input.classList.add('correct');
+      onComplete(false, '(revealed)', q.a);
+    }
+  };
+}
+
 function startQuiz() {
   // Placeholder until engine is added
   document.getElementById('card-container').innerHTML =
