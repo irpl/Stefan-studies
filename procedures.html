@@ -302,6 +302,25 @@
 <script>
 // QUESTIONS array — populated in subsequent edits
 const QUESTIONS = [
+  // --- Questions 1-15 ---
+  { id: 1, type: "multi-fill", q: "Turbojets inbound to KMCN, KMAC, and KWRB operating at or above 11,000 feet must be cleared to cross 15 miles from KMCN at ___ and ___.", blanks: ["11,000 feet", "250 knots"] },
+  { id: 2, type: "fill", q: "Departures from KMCN requesting 11,000 feet or above must be cleared to ___ and told to expect their filed altitude 10 minutes after departure.", a: "10,000 feet", numeric: true },
+  { id: 3, type: "fill", q: "The altitude limits of restricted area R3002E are ___.", a: "8,000-14,000 feet" },
+  { id: 4, type: "mcq", q: "A80 South departures with a destination of KDAB or KSFB must be climbing to ___ or requested westbound altitude, if lower.", a: "FL320", pool: "fl" },
+  { id: 5, type: "fill", q: "Non-military aircraft landing KMCN and KWRB from ZJX must be ___.", a: "AOB FL230 descending to 11,000" },
+  { id: 6, type: "fill", q: "All prop departures from KATL must be cleared to ___ feet or requested altitude if lower.", a: "11,000", numeric: true },
+  { id: 7, type: "mcq", q: "Aircraft departing the Atlanta Terminal Area and landing KCHS/KJZI/KSAV/KHXD/KFLO requesting at or above FL230 must be assigned ___ as a final altitude.", a: "FL230", pool: "fl" },
+  { id: 8, type: "fill", q: "KABY arrivals transitioning from ZTL to ZJX must be descending to ___ feet.", a: "11,000", numeric: true },
+  { id: 9, type: "matching", q: "Match each sub-area of Restricted Area R3002 with its altitude limits:", pairs: [["A","SFC-4000"],["B","4000-8000"],["C","8000-14000"],["D","SFC-8000"],["E","8000-14000"],["F","14000-FL250"],["G","SFC-14000"]] },
+  { id: "10a", parent: "Turboprop/Prop aircraft inbound to airports south of KATL and KCTJ from the south:", type: "mcq", q: "Where must they be routed?", a: "Direct destination", options: ["Direct destination","Via the RNAV STAR","Via radar vectors","Via airway"] },
+  { id: "10b", parent: "Turboprop/Prop aircraft inbound to airports south of KATL and KCTJ from the south:", type: "mcq", q: "Where and at what altitude must they cross?", a: "20 miles from A80 ATL sector boundary at 11,000 ft", options: ["20 miles from A80 ATL sector boundary at 11,000 ft","10 miles from A80 ATL sector boundary at 11,000 ft","20 miles from A80 ATL sector boundary at 10,000 ft","30 miles from A80 ATL sector boundary at 11,000 ft"] },
+  { id: "10c", parent: "Turboprop/Prop aircraft inbound to airports south of KATL and KCTJ from the south:", type: "mcq", q: "Which sector takes them after handoff?", a: "A80 MCN Sector", options: ["A80 MCN Sector","A80 CSG Sector","A80 SOUTH Sector","ZTL 22"] },
+  { id: 11, type: "ordered", q: "Put these SINCA Sector steps in order — F-15 FCF departing KWRB requesting unrestricted climb to 15,000 ft MSL:", steps: ["APREQ w/21","Advise A80 that unrestricted climb to 15,000 ft w/in 5 mi radius of KWRB is approved","Advise A80 of EDCT if 19 or 21 unable to approve unrestricted climb"] },
+  { id: 12, type: "mcq", q: "Aircraft landing KGSP over flying the MACON sector must cross the MACON/SPARTANBURG boundary ___.", a: "AOB FL270", pool: "fl" },
+  { id: 13, type: "mcq", q: "Per the ZTL/ZJX LOA, inbounds to Shaw AFB (KSSC) must cross the center boundary at or below ___.", a: "FL230", pool: "fl" },
+  { id: 14, type: "fill", q: "RNAV Turbojet aircraft inbound to satellite airports north of KATL must enter A80 Atlanta Sector airspace from the south-east established on the appropriate STAR and cross TCP at ___.", a: "11,000 ft and 250K or less" },
+  { id: "15a", parent: "Arrivals to KLGC and KPIM from the north or northeast must be handled as follows:", type: "mcq", q: "What is one way to handle them?", a: "ZTL clear direct GRANT..KLGC/KPIM", options: ["ZTL clear direct GRANT..KLGC/KPIM","ZTL clear direct LGC","ZTL clear direct MACEY","Via the FLCON arrival"] },
+  { id: "15b", parent: "Arrivals to KLGC and KPIM from the north or northeast must be handled as follows:", type: "mcq", q: "What is the alternative (vector) handling?", a: "Vector A/C south of a point at least 40 NM from KATL", options: ["Vector A/C south of a point at least 40 NM from KATL","Vector A/C south of a point at least 20 NM from KATL","Vector A/C east of a point at least 40 NM from KATL","Vector A/C north of a point at least 40 NM from KATL"] },
   /* INSERT_QUESTIONS_HERE */
 ];
 
